@@ -1,35 +1,32 @@
 import React, { useState, useEffect } from "react";
 import { Box, render, Text } from "ink";
+
 import type { Agent } from "./agent";
-import type { BehaviorNodeStatus } from "./nodes";
+import { EventLogView } from "./cli/components/EventLogView";
+import type { Event } from "./event-log";
+import { useTerminalSize } from "./cli/use-terminal-size";
+import { Panel } from "./cli/components/Panel";
+import { TreeState } from "./cli/components/TreeState";
 
 const AgentMonitor = ({ agent }: { agent: Agent }) => {
-	const [status, setStatus] = useState<Record<string, BehaviorNodeStatus>>({});
+	const [events, setEvents] = useState<Event[]>([]);
+	const { rows } = useTerminalSize();
 
 	useEffect(() => {
-		const nodes = agent.allChildren();
-		const interval = setInterval(() => {
-			const newStatus: Record<string, BehaviorNodeStatus> = {};
-			for (const node of nodes) {
-				newStatus[node.id] = node.getState();
-			}
-			setStatus(newStatus);
-		}, 50);
-		return () => clearInterval(interval);
+		const unsub = agent.getEventLog().addListener((event) => {
+			setEvents((prev) => [...prev, event]);
+		});
+		return () => unsub();
 	}, [agent]);
 
 	return (
-		<Box flexDirection="row" flexGrow={1}>
-			<Box flexDirection="column">
-				{Object.entries(status).map(([id, status]) => (
-					<Text key={id}>{id}</Text>
-				))}
-			</Box>
-			<Box flexDirection="column" flexGrow={1} paddingLeft={1}>
-				{Object.entries(status).map(([id, status]) => (
-					<Text key={id}>{status}</Text>
-				))}
-			</Box>
+		<Box flexDirection="row" height={rows}>
+			<Panel title="Tree State" flexBasis={50} flexShrink={1}>
+				<TreeState agent={agent} />
+			</Panel>
+			<Panel title="Log" flexGrow={1}>
+				<EventLogView events={events} />
+			</Panel>
 		</Box>
 	);
 };

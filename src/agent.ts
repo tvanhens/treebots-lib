@@ -1,20 +1,27 @@
-import { BehaviorNode } from "./nodes";
 import { Blackboard } from "./blackboard";
 import { monitorAgent } from "./cli";
+import { EventLog } from "./event-log";
+
+import { BehaviorNode } from "./nodes";
 
 export interface ExecutionContext<
 	T extends Record<string, unknown> = Record<string, unknown>,
 > {
 	blackboard: Blackboard<T>;
+	eventLog: EventLog;
 }
 
 export class Agent extends BehaviorNode {
+	readonly id = "agent";
+	readonly children: BehaviorNode[] = [];
+
 	private context: ExecutionContext;
 
 	constructor() {
 		super(undefined, "agent");
 		this.context = {
 			blackboard: new Blackboard({}),
+			eventLog: new EventLog(),
 		};
 	}
 
@@ -23,7 +30,9 @@ export class Agent extends BehaviorNode {
 		monitorAgent(this);
 		(async () => {
 			while (true) {
-				await root.tick(this.context);
+				if (root instanceof BehaviorNode) {
+					await root.tick(this.context);
+				}
 				await new Promise((resolve) => setTimeout(resolve, 100));
 			}
 		})();
@@ -35,5 +44,13 @@ export class Agent extends BehaviorNode {
 			throw new Error("Root node not found");
 		}
 		return root;
+	}
+
+	getEventLog(): EventLog {
+		return this.context.eventLog;
+	}
+
+	getExecutionContext(): ExecutionContext {
+		return this.context;
 	}
 }

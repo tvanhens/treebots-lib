@@ -1,4 +1,4 @@
-import type { ExecutionContext } from "../agent";
+import { Agent, type ExecutionContext } from "../agent";
 
 export enum BehaviorNodeStatus {
 	Pending = "pending",
@@ -10,9 +10,9 @@ export enum BehaviorNodeStatus {
 export abstract class BehaviorNode {
 	readonly id: string;
 	readonly parent?: BehaviorNode;
+	readonly children: BehaviorNode[];
 
 	private state: BehaviorNodeStatus;
-	protected children: BehaviorNode[];
 
 	constructor(parent: BehaviorNode | undefined, id: string) {
 		this.id = id;
@@ -54,6 +54,13 @@ export abstract class BehaviorNode {
 			return;
 		}
 
+		this.getExecutionContext().eventLog.addEvent({
+			type: "nodeStateChange",
+			node: this.id,
+			fromState: this.state,
+			toState: state,
+		});
+
 		this.state = state;
 	}
 
@@ -75,5 +82,16 @@ export abstract class BehaviorNode {
 			children.push(...child.allChildren());
 		}
 		return children;
+	}
+
+	getExecutionContext(): ExecutionContext {
+		let parent = this.parent;
+		while (parent) {
+			if (parent instanceof Agent) {
+				return parent.getExecutionContext();
+			}
+			parent = parent.parent;
+		}
+		throw new Error("No execution context found");
 	}
 }
