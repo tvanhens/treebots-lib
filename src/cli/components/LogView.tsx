@@ -23,7 +23,11 @@ export function LogView({ agent }: LogViewProps) {
 		<Box flexDirection="column">
 			{logs.map((log) => {
 				if (log.type === "logMessage") {
-					return <Text key={log.id}>{log.message}</Text>;
+					return (
+						<Text key={log.id} wrap="truncate-end">
+							{log.message}
+						</Text>
+					);
 				}
 			})}
 		</Box>

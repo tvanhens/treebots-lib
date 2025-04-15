@@ -18,6 +18,7 @@ export interface ExecutionContext<
 
 export class Agent extends BehaviorNode {
 	readonly id = "agent";
+	readonly nodeType = "agent";
 	readonly children: BehaviorNode[] = [];
 
 	private context: ExecutionContext;

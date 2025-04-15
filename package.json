@@ -3,6 +3,7 @@
   "module": "src/sindex.ts",
   "type": "module",
   "devDependencies": {
+    "@modelcontextprotocol/server-filesystem": "^2025.3.28",
     "@types/bun": "latest",
     "@types/react": "^18.2.0",
     "firecrawl-mcp": "^1.7.2"

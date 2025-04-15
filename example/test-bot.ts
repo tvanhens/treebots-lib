@@ -1,23 +1,32 @@
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import path from "node:path";
+
 import { Agent, SequenceNode, AddMessageNode, InferTextNode } from "../src";
-import { WaitNode } from "../src/nodes/actions/WaitNode";
 import { EnableTools } from "../src/nodes/actions/EnableTool";
 
 const openrouter = createOpenRouter();
 
 const agent = new Agent();
 
+const resultsDirectory = path.join(process.cwd(), "tmp");
+
 await agent.addStdioMCP("firecrawl", {
-	command: "firecrawl-mcp",
+	command: "bunx",
+	args: ["firecrawl-mcp"],
+});
+
+await agent.addStdioMCP("fs", {
+	command: "bunx",
+	args: ["@modelcontextprotocol/server-filesystem", resultsDirectory],
 });
 
 const main = new SequenceNode(agent, "main");
 
 const pageUrl =
-	"https://auctions.yahoo.co.jp/search/search?p=fender+japan&auccat=22436&va=fender+japan&istatus=2&new=1&is_postage_mode=1&dest_pref_code=13&b=1&n=50&s1=new&o1=d&mode=1";
+	"https://raw.githubusercontent.com/modelcontextprotocol/servers/refs/heads/main/src/filesystem/README.md";
 
 new EnableTools(main, "enableTools", {
-	tools: ["firecrawl::firecrawl_scrape"],
+	tools: ["firecrawl::firecrawl_scrape", "fs::write_file"],
 });
 
 new AddMessageNode(main, "requestScrape", {
@@ -26,11 +35,28 @@ new AddMessageNode(main, "requestScrape", {
 });
 
 new InferTextNode(main, "scrapeResult", {
-	model: openrouter("openai/gpt-4o"),
+	// Simple task so lets use a small model
+	model: openrouter("anthropic/claude-3.5-haiku"),
 });
 
-new WaitNode(main, "wait", {
-	durationInMilliseconds: 10000,
+new AddMessageNode(main, "translateResult", {
+	role: "user",
+	message: "Translate the result into Spanish.",
+});
+
+new InferTextNode(main, "translateResult", {
+	// Let's use a larger model optimized for translation
+	model: openrouter("google/gemini-2.5-pro-preview-03-25"),
+});
+
+new AddMessageNode(main, "writeFile", {
+	role: "user",
+	message: `Write the result into a text file in ${resultsDirectory}/TRANSLATED.md.`,
+});
+
+new InferTextNode(main, "writeFileResult", {
+	// Simple task so lets use a small model
+	model: openrouter("anthropic/claude-3.5-haiku"),
 });
 
 agent.run();

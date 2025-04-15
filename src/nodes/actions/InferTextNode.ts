@@ -64,7 +64,9 @@ export class InferTextNode extends BehaviorNode {
 				if (chunk.type === "tool-call") {
 					executionContext.eventLog.addEvent({
 						type: "logMessage",
-						message: `Tool called: ${chunk.toolName}`,
+						message: `Tool called: ${chunk.toolName} with args: ${JSON.stringify(
+							chunk.args,
+						)}`,
 					});
 				}
 			}
