@@ -4,11 +4,16 @@ import { EventLog } from "./event-log";
 
 import { BehaviorNode } from "./nodes";
 
+import { Experimental_StdioMCPTransport, type StdioConfig } from "ai/mcp-stdio";
+import { experimental_createMCPClient as createMCPClient, type Tool } from "ai";
+
 export interface ExecutionContext<
 	T extends Record<string, unknown> = Record<string, unknown>,
 > {
 	blackboard: Blackboard<T>;
 	eventLog: EventLog;
+	enabledTools: Record<string, Tool>;
+	mcpClients: Record<string, Awaited<ReturnType<typeof createMCPClient>>>;
 }
 
 export class Agent extends BehaviorNode {
@@ -22,7 +27,17 @@ export class Agent extends BehaviorNode {
 		this.context = {
 			blackboard: new Blackboard({}),
 			eventLog: new EventLog(),
+			enabledTools: {},
+			mcpClients: {},
 		};
+
+		process.on("SIGINT", async () => {
+			for (const client of Object.values(this.context.mcpClients)) {
+				await client.close();
+			}
+
+			process.exit(0);
+		});
 	}
 
 	async run(): Promise<void> {
@@ -33,6 +48,7 @@ export class Agent extends BehaviorNode {
 				if (root instanceof BehaviorNode) {
 					await root.tick(this.context);
 				}
+				// TODO: this is gross, we should try to make it event based.
 				await new Promise((resolve) => setTimeout(resolve, 100));
 			}
 		})();
@@ -52,5 +68,12 @@ export class Agent extends BehaviorNode {
 
 	getExecutionContext(): ExecutionContext {
 		return this.context;
+	}
+
+	async addStdioMCP(id: string, transport: StdioConfig) {
+		const client = createMCPClient({
+			transport: new Experimental_StdioMCPTransport(transport),
+		});
+		this.context.mcpClients[id] = await client;
 	}
 }

@@ -33,6 +33,18 @@ export class InferTextNode extends BehaviorNode {
 		const stream = streamText({
 			model: this.props.model,
 			messages,
+			tools: executionContext.enabledTools,
+			onStepFinish: (stepResult) => {
+				executionContext.blackboard.updateState({
+					messages: [
+						...(executionContext.blackboard.getKey(
+							"messages",
+						) as CoreMessage[]),
+						...stepResult.response.messages,
+					],
+				});
+				this.setState(BehaviorNodeStatus.Success);
+			},
 		});
 
 		(async () => {
@@ -47,19 +59,11 @@ export class InferTextNode extends BehaviorNode {
 					return;
 				}
 
-				if (chunk.type === "finish") {
-					executionContext.blackboard.updateState({
-						messages: [
-							...(executionContext.blackboard.getKey(
-								"messages",
-							) as CoreMessage[]),
-							{
-								role: "assistant",
-								content: this.text,
-							},
-						],
+				if (chunk.type === "tool-call") {
+					executionContext.eventLog.addEvent({
+						type: "logMessage",
+						message: `Tool called: ${chunk.toolName}`,
 					});
-					this.setState(BehaviorNodeStatus.Success);
 				}
 			}
 		})();

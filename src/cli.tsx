@@ -5,17 +5,23 @@ import { useTerminalSize } from "./cli/use-terminal-size";
 import { Panel } from "./cli/components/Panel";
 import { TreeState } from "./cli/components/TreeState";
 import { ActiveNodeView } from "./cli/components/ActiveNodeView";
+import { LogView } from "./cli/components/LogView";
 
 const AgentMonitor = ({ agent }: { agent: Agent }) => {
 	const { rows } = useTerminalSize();
 
 	return (
-		<Box flexDirection="row" height={rows}>
-			<Panel title="Tree State" flexBasis={50} flexShrink={1}>
-				<TreeState agent={agent} />
-			</Panel>
-			<Panel title="Active Nodes" flexGrow={1}>
-				<ActiveNodeView agent={agent} />
+		<Box flexDirection="column" height={rows}>
+			<Box flexDirection="row">
+				<Panel title="Tree State">
+					<TreeState agent={agent} />
+				</Panel>
+				<Panel title="Active Nodes" flexGrow={1}>
+					<ActiveNodeView agent={agent} />
+				</Panel>
+			</Box>
+			<Panel title="Log" flexGrow={1}>
+				<LogView agent={agent} />
 			</Panel>
 		</Box>
 	);

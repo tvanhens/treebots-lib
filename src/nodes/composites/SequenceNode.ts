@@ -32,11 +32,4 @@ export class SequenceNode extends BehaviorNode {
 
 		this.setState(BehaviorNodeStatus.Success);
 	}
-
-	async exit(_executionContext: ExecutionContext): Promise<void> {
-		for (const child of this.children) {
-			child.setState(BehaviorNodeStatus.Pending);
-		}
-		this.setState(BehaviorNodeStatus.Pending);
-	}
 }

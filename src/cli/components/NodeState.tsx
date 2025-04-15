@@ -23,7 +23,7 @@ export function InferTextNodeState({ node }: { node: InferTextNode }) {
 			<Box flexBasis={"10%"}>
 				<Text>{state.id}</Text>
 			</Box>
-			<Box width={"100%"}>
+			<Box>
 				<Text wrap="truncate-start">{state.text}</Text>
 			</Box>
 		</Box>
