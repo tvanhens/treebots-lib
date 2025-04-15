@@ -1,4 +1,4 @@
 export * from "./BehaviorNode";
-export * from "./SequenceNode";
-export * from "./AddMessageNode";
-export * from "./InferTextNode";
+export * from "./composites/SequenceNode";
+export * from "./actions/AddMessageNode";
+export * from "./actions/InferTextNode";

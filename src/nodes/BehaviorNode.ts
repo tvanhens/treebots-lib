@@ -1,10 +1,10 @@
 import type { ExecutionContext } from "../agent";
 
 export enum BehaviorNodeStatus {
-	Pending = 0,
-	Running = 1,
-	Success = 2,
-	Failure = 3,
+	Pending = "pending",
+	Running = "running",
+	Success = "success",
+	Failure = "failure",
 }
 
 export abstract class BehaviorNode {
@@ -31,10 +31,9 @@ export abstract class BehaviorNode {
 		}
 
 		if (this.getState() === BehaviorNodeStatus.Running) {
-			const status = await this.doTick(executionContext);
+			await this.doTick(executionContext);
 
-			if (status !== BehaviorNodeStatus.Running) {
-				this.setState(status);
+			if (this.getState() !== BehaviorNodeStatus.Running) {
 				this.exit(executionContext);
 			}
 		}
@@ -42,10 +41,8 @@ export abstract class BehaviorNode {
 		return this.getState();
 	}
 
-	protected doTick(
-		executionContext: ExecutionContext,
-	): BehaviorNodeStatus | Promise<BehaviorNodeStatus> {
-		return BehaviorNodeStatus.Success;
+	protected doTick(executionContext: ExecutionContext): Promise<void> | void {
+		return Promise.resolve();
 	}
 
 	protected enter(_executionContext: ExecutionContext): void {}
@@ -70,5 +67,13 @@ export abstract class BehaviorNode {
 
 	getChildren(): BehaviorNode[] {
 		return this.children;
+	}
+
+	allChildren(): BehaviorNode[] {
+		const children = this.getChildren();
+		for (const child of children) {
+			children.push(...child.allChildren());
+		}
+		return children;
 	}
 }

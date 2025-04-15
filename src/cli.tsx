@@ -1,20 +1,39 @@
 import React, { useState, useEffect } from "react";
-import { render,  Text } from "ink";
+import { Box, render, Text } from "ink";
+import type { Agent } from "./agent";
+import type { BehaviorNodeStatus } from "./nodes";
 
-const Counter = () => {
-	const [counter, setCounter] = useState(0);
+const AgentMonitor = ({ agent }: { agent: Agent }) => {
+	const [status, setStatus] = useState<Record<string, BehaviorNodeStatus>>({});
 
 	useEffect(() => {
-		const timer = setInterval(() => {
-			setCounter(previousCounter => previousCounter + 1);
-		}, 100);
+		const nodes = agent.allChildren();
+		const interval = setInterval(() => {
+			const newStatus: Record<string, BehaviorNodeStatus> = {};
+			for (const node of nodes) {
+				newStatus[node.id] = node.getState();
+			}
+			setStatus(newStatus);
+		}, 50);
+		return () => clearInterval(interval);
+	}, [agent]);
 
-		return () => {
-			clearInterval(timer);
-		};
-	}, []);
-
-	return <Text color="green">{counter} tests passed</Text>;
+	return (
+		<Box flexDirection="row" flexGrow={1}>
+			<Box flexDirection="column">
+				{Object.entries(status).map(([id, status]) => (
+					<Text key={id}>{id}</Text>
+				))}
+			</Box>
+			<Box flexDirection="column" flexGrow={1} paddingLeft={1}>
+				{Object.entries(status).map(([id, status]) => (
+					<Text key={id}>{status}</Text>
+				))}
+			</Box>
+		</Box>
+	);
 };
 
-render(<Counter />);
+export function monitorAgent(agent: Agent) {
+	render(<AgentMonitor agent={agent} />);
+}

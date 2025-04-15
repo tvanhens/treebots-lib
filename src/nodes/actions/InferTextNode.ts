@@ -1,13 +1,16 @@
 import { streamText } from "ai";
 import type { CoreMessage, LanguageModelV1 } from "ai";
 
-import { BehaviorNode, BehaviorNodeStatus } from "./BehaviorNode";
-import type { ExecutionContext } from "../agent";
+import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
+import type { ExecutionContext } from "../../agent";
 
 interface InferTextNodeProps {
 	model: LanguageModelV1;
 }
 
+/**
+ * A node that infers a text using a language model.
+ */
 export class InferTextNode extends BehaviorNode {
 	constructor(
 		parent: BehaviorNode,
