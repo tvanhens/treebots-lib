@@ -4,7 +4,7 @@ import type { CoreMessage, LanguageModelV1 } from "ai";
 import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
 import type { ExecutionContext } from "../../agent";
 
-interface InferTextNodeProps {
+export interface InferTextNodeProps {
 	model: LanguageModelV1;
 }
 

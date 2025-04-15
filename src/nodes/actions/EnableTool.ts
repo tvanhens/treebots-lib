@@ -1,7 +1,7 @@
 import type { ExecutionContext } from "../../agent";
 import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
 
-export interface EnableToolsConfig {
+export interface EnableToolsProps {
 	tools: string[];
 }
 
@@ -11,7 +11,7 @@ export class EnableTools extends BehaviorNode {
 	constructor(
 		parent: BehaviorNode,
 		id: string,
-		private config: EnableToolsConfig,
+		private config: EnableToolsProps,
 	) {
 		super(parent, id);
 	}

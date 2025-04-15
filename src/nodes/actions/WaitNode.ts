@@ -1,7 +1,7 @@
 import type { ExecutionContext } from "../..";
 import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
 
-interface WaitNodeOptions {
+export interface WaitNodeProps {
 	durationInMilliseconds: number;
 }
 
@@ -14,7 +14,7 @@ export class WaitNode extends BehaviorNode {
 	constructor(
 		parent: BehaviorNode,
 		id: string,
-		private options: WaitNodeOptions,
+		private props: WaitNodeProps,
 	) {
 		super(parent, id);
 	}
@@ -22,6 +22,6 @@ export class WaitNode extends BehaviorNode {
 	protected enter(_executionContext: ExecutionContext): void {
 		setTimeout(() => {
 			this.setState(BehaviorNodeStatus.Success);
-		}, this.options.durationInMilliseconds);
+		}, this.props.durationInMilliseconds);
 	}
 }

@@ -3,7 +3,7 @@ import type { ExecutionContext } from "../../agent";
 
 import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
 
-interface AddMessageNodeProps {
+export interface AddMessageNodeProps {
 	role: "user" | "assistant" | "system";
 	message: string;
 }
