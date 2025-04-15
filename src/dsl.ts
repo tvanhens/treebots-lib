@@ -1,34 +1,81 @@
+import type { LanguageModelV1 } from "ai";
 import {
 	AddMessageNode,
-	type AddMessageNodeProps,
 	type BehaviorNode,
 	InferTextNode,
-	type InferTextNodeProps,
 	SequenceNode,
 } from "./nodes";
-import { EnableTools, type EnableToolsProps } from "./nodes/actions/EnableTool";
+import { EnableTools } from "./nodes/actions/EnableTool";
 
 export interface BodyScope {
-	sequence: (id: string, body: (ctx: BodyScope) => void) => void;
-	inferText: (id: string, args: InferTextNodeProps) => void;
-	addMessage: (id: string, args: AddMessageNodeProps) => void;
-	enableTools: (id: string, args: EnableToolsProps) => void;
+	messages: {
+		user: (parts: TemplateStringsArray, ...args: string[]) => void;
+		assistant: (parts: TemplateStringsArray, ...args: string[]) => void;
+		system: (parts: TemplateStringsArray, ...args: string[]) => void;
+	};
+
+	infer: {
+		text: (id: string, model: LanguageModelV1) => void;
+	};
+
+	tools: {
+		enable: (tools: string[]) => void;
+	};
+
+	control: {
+		sequence: (id: string, body: (ctx: BodyScope) => void) => void;
+	};
 }
 
 export function buildScope(parent: BehaviorNode): BodyScope {
+	let messageId = 0;
+
 	const scope: BodyScope = {
-		sequence: (id, body) => {
-			const node = new SequenceNode(parent, id);
-			body(buildScope(node));
+		messages: {
+			user: (parts, ...args) => {
+				new AddMessageNode(parent, `user-${messageId}`, {
+					role: "user",
+					message: parts.reduce((acc, part, i) => {
+						return acc + part + (args[i] ?? "");
+					}, ""),
+				});
+				messageId++;
+			},
+			assistant: (parts, ...args) => {
+				new AddMessageNode(parent, `assistant-${messageId}`, {
+					role: "assistant",
+					message: parts.reduce((acc, part, i) => {
+						return acc + part + (args[i] ?? "");
+					}, ""),
+				});
+				messageId++;
+			},
+			system: (parts, ...args) => {
+				new AddMessageNode(parent, `system-${messageId}`, {
+					role: "system",
+					message: parts.reduce((acc, part, i) => {
+						return acc + part + (args[i] ?? "");
+					}, ""),
+				});
+				messageId++;
+			},
 		},
-		inferText: (id, args) => {
-			return new InferTextNode(parent, id, args);
+		tools: {
+			enable: (tools) => {
+				new EnableTools(parent, `enable-${messageId}`, { tools });
+				messageId++;
+			},
 		},
-		addMessage: (id, args) => {
-			return new AddMessageNode(parent, id, args);
+		infer: {
+			text: (id, model) => {
+				return new InferTextNode(parent, id, { model });
+			},
 		},
-		enableTools: (id, args) => {
-			return new EnableTools(parent, id, args);
+		control: {
+			sequence: (id, body) => {
+				const node = new SequenceNode(parent, id);
+				body(buildScope(node));
+			},
 		},
 	};
 	return scope;
