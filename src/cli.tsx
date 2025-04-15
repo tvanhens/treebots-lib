@@ -1,10 +1,10 @@
 import { Box, render } from "ink";
 
 import type { Agent } from "./agent";
-import { EventLogView } from "./cli/components/EventLogView";
 import { useTerminalSize } from "./cli/use-terminal-size";
 import { Panel } from "./cli/components/Panel";
 import { TreeState } from "./cli/components/TreeState";
+import { ActiveNodeView } from "./cli/components/ActiveNodeView";
 
 const AgentMonitor = ({ agent }: { agent: Agent }) => {
 	const { rows } = useTerminalSize();
@@ -14,8 +14,8 @@ const AgentMonitor = ({ agent }: { agent: Agent }) => {
 			<Panel title="Tree State" flexBasis={50} flexShrink={1}>
 				<TreeState agent={agent} />
 			</Panel>
-			<Panel title="Log" flexGrow={1}>
-				<EventLogView agent={agent} />
+			<Panel title="Active Nodes" flexGrow={1}>
+				<ActiveNodeView agent={agent} />
 			</Panel>
 		</Box>
 	);

@@ -77,7 +77,7 @@ export abstract class BehaviorNode {
 	}
 
 	allChildren(): BehaviorNode[] {
-		const children = this.getChildren();
+		const children = [...this.getChildren()];
 		for (const child of children) {
 			children.push(...child.allChildren());
 		}

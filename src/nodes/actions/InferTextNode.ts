@@ -12,15 +12,20 @@ interface InferTextNodeProps {
  * A node that infers a text using a language model.
  */
 export class InferTextNode extends BehaviorNode {
+	text: string;
+
 	constructor(
 		parent: BehaviorNode,
 		id: string,
 		private props: InferTextNodeProps,
 	) {
 		super(parent, id);
+		this.text = "";
 	}
 
 	async enter(executionContext: ExecutionContext) {
+		this.text = "";
+
 		const messages = executionContext.blackboard.getKey(
 			"messages",
 		) as CoreMessage[];
@@ -30,12 +35,10 @@ export class InferTextNode extends BehaviorNode {
 			messages,
 		});
 
-		let text = "";
-
 		(async () => {
 			for await (const chunk of stream.fullStream) {
 				if (chunk.type === "text-delta") {
-					text += chunk.textDelta;
+					this.text += chunk.textDelta;
 				}
 
 				if (chunk.type === "error") {
@@ -52,7 +55,7 @@ export class InferTextNode extends BehaviorNode {
 							) as CoreMessage[]),
 							{
 								role: "assistant",
-								content: text,
+								content: this.text,
 							},
 						],
 					});

@@ -1,19 +1,23 @@
 import type { BehaviorNodeStatus } from "./nodes";
 
 export interface NodeStateChangedEvent {
-	id: number;
 	type: "nodeStateChange";
 	node: string;
 	fromState: BehaviorNodeStatus;
 	toState: BehaviorNodeStatus;
 }
 
-export type Event = NodeStateChangedEvent;
+export interface LogMessageEvent {
+	type: "logMessage";
+	message: string;
+}
 
-type EventListener = (event: Event) => void;
+export type Event = NodeStateChangedEvent | LogMessageEvent;
+
+type EventListener = (event: Event & { id: number }) => void;
 
 export class EventLog {
-	private events: Event[];
+	private events: (Event & { id: number })[];
 	private listeners: EventListener[];
 
 	constructor() {
@@ -21,11 +25,11 @@ export class EventLog {
 		this.listeners = [];
 	}
 
-	addEvent(event: Omit<Event, "id">) {
+	addEvent(event: Event) {
 		const id = this.events.length;
-		this.events.push({ ...event, id });
+		this.events.push({ ...event, id } as Event & { id: number });
 		for (const listener of this.listeners) {
-			listener({ ...event, id });
+			listener({ ...event, id } as Event & { id: number });
 		}
 	}
 

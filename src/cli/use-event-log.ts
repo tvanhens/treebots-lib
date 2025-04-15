@@ -3,7 +3,7 @@ import type { Agent } from "../agent";
 import type { Event } from "../event-log";
 
 export function useEventLog(agent: Agent) {
-	const [events, setEvents] = useState<Event[]>([]);
+	const [events, setEvents] = useState<(Event & { id: number })[]>([]);
 
 	useEffect(() => {
 		const unsub = agent.getEventLog().addListener((event) => {

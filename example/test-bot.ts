@@ -10,7 +10,7 @@ const rootSequence = new SequenceNode(agent, "root");
 
 new AddMessageNode(rootSequence, "userQuestion", {
 	role: "user",
-	message: "Hello, how are you?",
+	message: "Write a short story about a cat",
 });
 
 new InferTextNode(rootSequence, "assistantResponse", {
