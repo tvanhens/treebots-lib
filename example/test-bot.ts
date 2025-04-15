@@ -19,16 +19,39 @@ await agent.addStdioMCP("fs", {
 	args: ["@modelcontextprotocol/server-filesystem", resultsDirectory],
 });
 
-const pageUrl =
-	"https://raw.githubusercontent.com/modelcontextprotocol/servers/refs/heads/main/src/filesystem/README.md";
-
 agent
 	.sequence("main", (ctx) => {
-		ctx.tools.enable(["firecrawl::firecrawl_scrape", "fs::write_file"]);
+		ctx.messages.clear();
+
+		ctx.tools.enable([
+			"firecrawl::firecrawl_scrape",
+			"fs::write_file",
+			"fs::read_file",
+		]);
+
+		ctx.messages.user`
+            Read the file ${resultsDirectory}/TODO.md`;
+		ctx.infer.text("nextUrl", openrouter("anthropic/claude-3.5-haiku"));
+
+		ctx.messages.user`Are there urls in the file?`;
+		ctx.infer.yesNo("moreUrls", openrouter("anthropic/claude-3.7-sonnet"));
+
+		ctx.messages.system`
+            <instructions>
+            Using the file that was read, format a response to the user's request.
+            </instructions>
+
+            <response_format>
+            <name>{the name of the file to scrape}</name>
+            <url>{the url to scrape}</url>
+            </response_format>
+        `;
+		ctx.messages.user`Choose a url from the file.`;
+		ctx.infer.text("nextUrl", openrouter("anthropic/claude-3.5-haiku"));
 
 		// Scrape the page
 
-		ctx.messages.user`Use firecrawl to scrape ${pageUrl}`;
+		ctx.messages.user`Use firecrawl to scrape the next chosen url.`;
 		ctx.infer.text("scrapeResult", openrouter("anthropic/claude-3.5-haiku"));
 
 		// Translate the result into Spanish
@@ -41,10 +64,17 @@ agent
 
 		// Write the result into a text file
 
-		ctx.messages
-			.user`Write the result into a text file in ${resultsDirectory}/TRANSLATED.md.`;
+		ctx.messages.user`
+            Write the translated result into a text file in ${resultsDirectory}/out_{name}.md`;
 		ctx.infer.text("writeFileResult", openrouter("anthropic/claude-3.5-haiku"));
+
+		ctx.messages.user`
+            Write a ${resultsDirectory}/TODO.md using write_file, do not read before writing.
+            Remove the list entry for the url and name you have just scraped and write an updated version of the file without it.
+            Leave the other entries in the file in the same format.
+            It is OK to remove the entire list if you have scraped all the items.`;
+		ctx.infer.text("removeUrl", openrouter("anthropic/claude-3.5-haiku"));
 	})
-	.repeat(2);
+	.repeat();
 
 agent.run();

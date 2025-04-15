@@ -7,6 +7,8 @@ import {
 } from "./nodes";
 import { EnableTools } from "./nodes/actions/EnableTool";
 import { RepeatNode } from "./nodes/decorators/RepeatNode";
+import { ClearMessagesNode } from "./nodes/actions/ClearMessagesNode";
+import { InferYesNoNode } from "./nodes/actions/InferYesNo";
 
 export interface NodeHandle {
 	repeat: (maxTimes?: number) => NodeHandle;
@@ -17,10 +19,12 @@ export interface BodyScope {
 		user: (parts: TemplateStringsArray, ...args: string[]) => NodeHandle;
 		assistant: (parts: TemplateStringsArray, ...args: string[]) => NodeHandle;
 		system: (parts: TemplateStringsArray, ...args: string[]) => NodeHandle;
+		clear: () => NodeHandle;
 	};
 
 	infer: {
 		text: (id: string, model: LanguageModelV1) => NodeHandle;
+		yesNo: (id: string, model: LanguageModelV1) => NodeHandle;
 	};
 
 	tools: {
@@ -82,6 +86,11 @@ export function buildScope(parent: BehaviorNode): BodyScope {
 				messageId++;
 				return makeNodeHandle(node);
 			},
+			clear: () => {
+				const node = new ClearMessagesNode(parent, `clear-${messageId}`);
+				messageId++;
+				return makeNodeHandle(node);
+			},
 		},
 		tools: {
 			enable: (tools) => {
@@ -95,6 +104,11 @@ export function buildScope(parent: BehaviorNode): BodyScope {
 		infer: {
 			text: (id, model) => {
 				const node = new InferTextNode(parent, id, { model });
+				return makeNodeHandle(node);
+			},
+
+			yesNo: (id, model) => {
+				const node = new InferYesNoNode(parent, id, { model });
 				return makeNodeHandle(node);
 			},
 		},
