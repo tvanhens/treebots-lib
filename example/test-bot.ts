@@ -1,5 +1,6 @@
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { Agent, SequenceNode, AddMessageNode, InferTextNode } from "../src";
+import { WaitNode } from "../src/nodes/actions/WaitNode";
 
 const openrouter = createOpenRouter();
 
@@ -14,6 +15,10 @@ new AddMessageNode(rootSequence, "userQuestion", {
 
 new InferTextNode(rootSequence, "assistantResponse", {
 	model: openrouter("openai/gpt-4o"),
+});
+
+new WaitNode(rootSequence, "wait", {
+	durationInMilliseconds: 10000,
 });
 
 agent.run();

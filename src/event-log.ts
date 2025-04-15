@@ -1,6 +1,7 @@
 import type { BehaviorNodeStatus } from "./nodes";
 
 export interface NodeStateChangedEvent {
+	id: number;
 	type: "nodeStateChange";
 	node: string;
 	fromState: BehaviorNodeStatus;
@@ -20,10 +21,11 @@ export class EventLog {
 		this.listeners = [];
 	}
 
-	addEvent(event: Event) {
-		this.events.push(event);
+	addEvent(event: Omit<Event, "id">) {
+		const id = this.events.length;
+		this.events.push({ ...event, id });
 		for (const listener of this.listeners) {
-			listener(event);
+			listener({ ...event, id });
 		}
 	}
 

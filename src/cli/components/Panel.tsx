@@ -17,12 +17,13 @@ export function Panel({ title, children, ...props }: PanelProps) {
 				borderRight={false}
 				paddingLeft={1}
 				paddingRight={1}
+				flexShrink={0}
 			>
 				<Text bold color={"white"}>
 					{title}
 				</Text>
 			</Box>
-			<Box>{children}</Box>
+			<Box paddingBottom={1}>{children}</Box>
 		</Box>
 	);
 }
