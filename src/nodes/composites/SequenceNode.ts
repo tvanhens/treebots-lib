@@ -9,6 +9,8 @@ import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
  * If all children return Success, the node returns Success.
  */
 export class SequenceNode extends BehaviorNode {
+	readonly nodeType = "sequence";
+
 	async enter(_executionContext: ExecutionContext): Promise<void> {
 		for (const child of this.children) {
 			child.setState(BehaviorNodeStatus.Pending);

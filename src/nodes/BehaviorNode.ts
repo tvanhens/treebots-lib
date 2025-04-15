@@ -11,6 +11,7 @@ export abstract class BehaviorNode {
 	readonly id: string;
 	readonly parent?: BehaviorNode;
 	readonly children: BehaviorNode[];
+	abstract readonly nodeType: string;
 
 	private state: BehaviorNodeStatus;
 

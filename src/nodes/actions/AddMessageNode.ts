@@ -12,6 +12,8 @@ interface AddMessageNodeProps {
  * A node that adds a message to the execution context.
  */
 export class AddMessageNode extends BehaviorNode {
+	readonly nodeType = "add-message";
+
 	constructor(
 		parent: BehaviorNode,
 		id: string,

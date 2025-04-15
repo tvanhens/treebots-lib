@@ -9,6 +9,8 @@ interface WaitNodeOptions {
  * A node that waits for a specified duration before completing successfully.
  */
 export class WaitNode extends BehaviorNode {
+	readonly nodeType = "wait";
+
 	constructor(
 		parent: BehaviorNode,
 		id: string,

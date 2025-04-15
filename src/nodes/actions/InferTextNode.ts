@@ -12,6 +12,8 @@ interface InferTextNodeProps {
  * A node that infers a text using a language model.
  */
 export class InferTextNode extends BehaviorNode {
+	readonly nodeType = "infer-text";
+
 	text: string;
 
 	constructor(

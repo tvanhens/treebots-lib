@@ -6,6 +6,8 @@ export interface EnableToolsConfig {
 }
 
 export class EnableTools extends BehaviorNode {
+	readonly nodeType = "enable-tools";
+
 	constructor(
 		parent: BehaviorNode,
 		id: string,
