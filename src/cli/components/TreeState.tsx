@@ -1,6 +1,6 @@
 import { Box, Text } from "ink";
 
-import { Status } from "./status";
+import { Status } from "./Status";
 import type { Agent } from "../../agent";
 import { useTreeState } from "../use-tree-state";
 

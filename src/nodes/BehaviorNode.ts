@@ -1,4 +1,5 @@
 import { Agent, type ExecutionContext } from "../agent";
+import { RepeatNode } from "./decorators/RepeatNode";
 
 export enum BehaviorNodeStatus {
 	Pending = "pending",
@@ -9,8 +10,8 @@ export enum BehaviorNodeStatus {
 
 export abstract class BehaviorNode {
 	readonly id: string;
-	readonly parent?: BehaviorNode;
-	readonly children: BehaviorNode[];
+	parent?: BehaviorNode;
+	children: BehaviorNode[];
 	abstract readonly nodeType: string;
 
 	private state: BehaviorNodeStatus;
@@ -71,6 +72,7 @@ export abstract class BehaviorNode {
 
 	addChild(child: BehaviorNode): void {
 		this.children.push(child);
+		child.parent = this;
 	}
 
 	getChildren(): BehaviorNode[] {
@@ -78,8 +80,9 @@ export abstract class BehaviorNode {
 	}
 
 	allChildren(): BehaviorNode[] {
-		const children = [...this.getChildren()];
-		for (const child of children) {
+		const children: BehaviorNode[] = [];
+		for (const child of this.getChildren()) {
+			children.push(child);
 			children.push(...child.allChildren());
 		}
 		return children;
@@ -94,5 +97,17 @@ export abstract class BehaviorNode {
 			parent = parent.parent;
 		}
 		throw new Error("No execution context found");
+	}
+
+	reset(): void {
+		this.setState(BehaviorNodeStatus.Pending);
+		for (const child of this.children) {
+			child.reset();
+		}
+	}
+
+	removeChild(child: BehaviorNode): void {
+		this.children = this.children.filter((c) => c !== child);
+		child.parent = undefined;
 	}
 }

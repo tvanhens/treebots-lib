@@ -6,8 +6,8 @@ import { BehaviorNode, SequenceNode } from "./nodes";
 
 import { Experimental_StdioMCPTransport, type StdioConfig } from "ai/mcp-stdio";
 import { experimental_createMCPClient as createMCPClient, type Tool } from "ai";
-import type { BodyScope } from "./dsl";
-import { buildScope } from "./dsl";
+import type { BodyScope, NodeHandle } from "./dsl";
+import { buildScope, makeNodeHandle } from "./dsl";
 
 export interface ExecutionContext<
 	T extends Record<string, unknown> = Record<string, unknown>,
@@ -80,8 +80,9 @@ export class Agent extends BehaviorNode {
 		this.context.mcpClients[id] = await client;
 	}
 
-	sequence(id: string, body: (ctx: BodyScope) => void) {
+	sequence(id: string, body: (ctx: BodyScope) => void): NodeHandle {
 		const root = new SequenceNode(this, id);
 		body(buildScope(root));
+		return makeNodeHandle(root);
 	}
 }

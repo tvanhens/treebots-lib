@@ -22,27 +22,29 @@ await agent.addStdioMCP("fs", {
 const pageUrl =
 	"https://raw.githubusercontent.com/modelcontextprotocol/servers/refs/heads/main/src/filesystem/README.md";
 
-agent.sequence("main", (ctx) => {
-	ctx.tools.enable(["firecrawl::firecrawl_scrape", "fs::write_file"]);
+agent
+	.sequence("main", (ctx) => {
+		ctx.tools.enable(["firecrawl::firecrawl_scrape", "fs::write_file"]);
 
-	// Scrape the page
+		// Scrape the page
 
-	ctx.messages.user`Use firecrawl to scrape ${pageUrl}`;
-	ctx.infer.text("scrapeResult", openrouter("anthropic/claude-3.5-haiku"));
+		ctx.messages.user`Use firecrawl to scrape ${pageUrl}`;
+		ctx.infer.text("scrapeResult", openrouter("anthropic/claude-3.5-haiku"));
 
-	// Translate the result into Spanish
+		// Translate the result into Spanish
 
-	ctx.messages.user`Translate the result into Spanish.`;
-	ctx.infer.text(
-		"translateResult",
-		openrouter("google/gemini-2.5-pro-preview-03-25"),
-	);
+		ctx.messages.user`Translate the result into Spanish.`;
+		ctx.infer.text(
+			"translateResult",
+			openrouter("google/gemini-2.5-pro-preview-03-25"),
+		);
 
-	// Write the result into a text file
+		// Write the result into a text file
 
-	ctx.messages
-		.user`Write the result into a text file in ${resultsDirectory}/TRANSLATED.md.`;
-	ctx.infer.text("writeFileResult", openrouter("anthropic/claude-3.5-haiku"));
-});
+		ctx.messages
+			.user`Write the result into a text file in ${resultsDirectory}/TRANSLATED.md.`;
+		ctx.infer.text("writeFileResult", openrouter("anthropic/claude-3.5-haiku"));
+	})
+	.repeat(2);
 
 agent.run();

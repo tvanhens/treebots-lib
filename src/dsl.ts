@@ -6,24 +6,44 @@ import {
 	SequenceNode,
 } from "./nodes";
 import { EnableTools } from "./nodes/actions/EnableTool";
+import { RepeatNode } from "./nodes/decorators/RepeatNode";
+
+export interface NodeHandle {
+	repeat: (maxTimes?: number) => NodeHandle;
+}
 
 export interface BodyScope {
 	messages: {
-		user: (parts: TemplateStringsArray, ...args: string[]) => void;
-		assistant: (parts: TemplateStringsArray, ...args: string[]) => void;
-		system: (parts: TemplateStringsArray, ...args: string[]) => void;
+		user: (parts: TemplateStringsArray, ...args: string[]) => NodeHandle;
+		assistant: (parts: TemplateStringsArray, ...args: string[]) => NodeHandle;
+		system: (parts: TemplateStringsArray, ...args: string[]) => NodeHandle;
 	};
 
 	infer: {
-		text: (id: string, model: LanguageModelV1) => void;
+		text: (id: string, model: LanguageModelV1) => NodeHandle;
 	};
 
 	tools: {
-		enable: (tools: string[]) => void;
+		enable: (tools: string[]) => NodeHandle;
 	};
 
 	control: {
-		sequence: (id: string, body: (ctx: BodyScope) => void) => void;
+		sequence: (id: string, body: (ctx: BodyScope) => void) => NodeHandle;
+	};
+}
+
+export function makeNodeHandle(node: BehaviorNode): NodeHandle {
+	return {
+		repeat: (maxTimes?: number) => {
+			const parent = node.parent;
+			if (!parent) {
+				throw new Error("Parent node not found");
+			}
+			const repeatNode = new RepeatNode(parent, "repeat", { maxTimes });
+			parent.removeChild(node);
+			repeatNode.addChild(node);
+			return makeNodeHandle(repeatNode);
+		},
 	};
 }
 
@@ -33,48 +53,56 @@ export function buildScope(parent: BehaviorNode): BodyScope {
 	const scope: BodyScope = {
 		messages: {
 			user: (parts, ...args) => {
-				new AddMessageNode(parent, `user-${messageId}`, {
+				const node = new AddMessageNode(parent, `user-${messageId}`, {
 					role: "user",
 					message: parts.reduce((acc, part, i) => {
 						return acc + part + (args[i] ?? "");
 					}, ""),
 				});
 				messageId++;
+				return makeNodeHandle(node);
 			},
 			assistant: (parts, ...args) => {
-				new AddMessageNode(parent, `assistant-${messageId}`, {
+				const node = new AddMessageNode(parent, `assistant-${messageId}`, {
 					role: "assistant",
 					message: parts.reduce((acc, part, i) => {
 						return acc + part + (args[i] ?? "");
 					}, ""),
 				});
 				messageId++;
+				return makeNodeHandle(node);
 			},
 			system: (parts, ...args) => {
-				new AddMessageNode(parent, `system-${messageId}`, {
+				const node = new AddMessageNode(parent, `system-${messageId}`, {
 					role: "system",
 					message: parts.reduce((acc, part, i) => {
 						return acc + part + (args[i] ?? "");
 					}, ""),
 				});
 				messageId++;
+				return makeNodeHandle(node);
 			},
 		},
 		tools: {
 			enable: (tools) => {
-				new EnableTools(parent, `enable-${messageId}`, { tools });
+				const node = new EnableTools(parent, `enable-${messageId}`, {
+					tools,
+				});
 				messageId++;
+				return makeNodeHandle(node);
 			},
 		},
 		infer: {
 			text: (id, model) => {
-				return new InferTextNode(parent, id, { model });
+				const node = new InferTextNode(parent, id, { model });
+				return makeNodeHandle(node);
 			},
 		},
 		control: {
 			sequence: (id, body) => {
 				const node = new SequenceNode(parent, id);
 				body(buildScope(node));
+				return makeNodeHandle(node);
 			},
 		},
 	};
