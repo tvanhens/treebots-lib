@@ -1,5 +1,4 @@
 import type { ExecutionContext } from "../../agent";
-
 import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
 
 /**

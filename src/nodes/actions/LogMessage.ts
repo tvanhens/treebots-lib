@@ -2,7 +2,7 @@ import type { ExecutionContext } from "../..";
 import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
 
 export interface LogMessageProps {
-	message: string;
+	message: () => string;
 }
 
 export class LogMessage extends BehaviorNode {
@@ -21,7 +21,7 @@ export class LogMessage extends BehaviorNode {
 	): Promise<BehaviorNodeStatus> {
 		executionContext.eventLog.addEvent({
 			type: "logMessage",
-			message: this.props.message,
+			message: this.props.message(),
 		});
 
 		return BehaviorNodeStatus.Success;

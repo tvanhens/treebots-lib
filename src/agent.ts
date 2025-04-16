@@ -9,10 +9,8 @@ import { EventLog } from "./event-log";
 import { BehaviorNode, type BehaviorNodeStatus, SequenceNode } from "./nodes";
 import { MessageStore } from "./messages";
 
-export interface ExecutionContext<
-	T extends Record<string, unknown> = Record<string, unknown>,
-> {
-	blackboard: Blackboard<T>;
+export interface ExecutionContext {
+	blackboard: Blackboard;
 	eventLog: EventLog;
 	enabledTools: Record<string, Tool>;
 	mcpClients: Record<string, Awaited<ReturnType<typeof createMCPClient>>>;
@@ -29,7 +27,7 @@ export class Agent extends BehaviorNode {
 	constructor() {
 		super(undefined, "agent");
 		this.context = {
-			blackboard: new Blackboard({}),
+			blackboard: new Blackboard(),
 			eventLog: new EventLog(),
 			enabledTools: {},
 			mcpClients: {},

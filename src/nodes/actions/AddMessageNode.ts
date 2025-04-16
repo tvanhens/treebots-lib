@@ -1,11 +1,10 @@
-import type { CoreMessage } from "ai";
 import type { ExecutionContext } from "../../agent";
 
 import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
 
 export interface AddMessageNodeProps {
 	role: "user" | "assistant" | "system";
-	message: string;
+	message: () => string;
 }
 
 /**
@@ -25,7 +24,7 @@ export class AddMessageNode extends BehaviorNode {
 	async doTick(ctx: ExecutionContext): Promise<BehaviorNodeStatus> {
 		ctx.messageStore.addMessage({
 			role: this.props.role,
-			content: this.props.message,
+			content: this.props.message(),
 		});
 		return BehaviorNodeStatus.Success;
 	}

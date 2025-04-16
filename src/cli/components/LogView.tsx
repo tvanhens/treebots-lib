@@ -24,7 +24,7 @@ export function LogView({ agent }: LogViewProps) {
 			{logs.map((log) => {
 				if (log.type === "logMessage") {
 					return (
-						<Text key={log.id} wrap="truncate-end">
+						<Text key={log.id} wrap="wrap">
 							{log.message}
 						</Text>
 					);

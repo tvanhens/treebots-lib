@@ -1,4 +1,3 @@
-import type { ExecutionContext } from "../..";
 import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
 
 export interface WaitNodeProps {

@@ -16,7 +16,9 @@ import { LogMessage } from "./nodes/actions/LogMessage";
 let id = 0;
 
 export interface NodeHandle {
+	id: string;
 	repeat: (maxTimes?: number) => NodeHandle;
+	$: (...keys: string[]) => () => unknown;
 }
 
 export interface BodyScope {
@@ -37,7 +39,10 @@ export interface BodyScope {
 	};
 
 	util: {
-		log: (message: string) => NodeHandle;
+		log: (
+			parts: TemplateStringsArray,
+			...args: (string | (() => unknown))[]
+		) => NodeHandle;
 	};
 
 	control: {
@@ -49,6 +54,13 @@ export interface BodyScope {
 
 export function makeNodeHandle(node: BehaviorNode): NodeHandle {
 	return {
+		id: node.id,
+		$: (...keys: string[]) => {
+			return () =>
+				node
+					.getExecutionContext()
+					.blackboard.getPath(`__node_result.${node.id}`, ...keys);
+		},
 		repeat: (maxTimes?: number) => {
 			const parent = node.parent;
 			if (!parent) {
@@ -68,9 +80,7 @@ export function buildScope(parent: BehaviorNode): BodyScope {
 			user: (parts, ...args) => {
 				const node = new AddMessageNode(parent, `user-${id}`, {
 					role: "user",
-					message: parts.reduce((acc, part, i) => {
-						return acc + part + (args[i] ?? "");
-					}, ""),
+					message: preprocessTemplate(parts, ...args),
 				});
 				id++;
 				return makeNodeHandle(node);
@@ -78,9 +88,7 @@ export function buildScope(parent: BehaviorNode): BodyScope {
 			assistant: (parts, ...args) => {
 				const node = new AddMessageNode(parent, `assistant-${id}`, {
 					role: "assistant",
-					message: parts.reduce((acc, part, i) => {
-						return acc + part + (args[i] ?? "");
-					}, ""),
+					message: preprocessTemplate(parts, ...args),
 				});
 				id++;
 				return makeNodeHandle(node);
@@ -88,9 +96,7 @@ export function buildScope(parent: BehaviorNode): BodyScope {
 			system: (parts, ...args) => {
 				const node = new AddMessageNode(parent, `system-${id}`, {
 					role: "system",
-					message: parts.reduce((acc, part, i) => {
-						return acc + part + (args[i] ?? "");
-					}, ""),
+					message: preprocessTemplate(parts, ...args),
 				});
 				id++;
 				return makeNodeHandle(node);
@@ -145,7 +151,8 @@ export function buildScope(parent: BehaviorNode): BodyScope {
 			},
 		},
 		util: {
-			log: (message) => {
+			log: (parts, ...args) => {
+				const message = preprocessTemplate(parts, ...args);
 				const node = new LogMessage(parent, `log-${id}`, { message });
 				id++;
 				return makeNodeHandle(node);
@@ -153,4 +160,35 @@ export function buildScope(parent: BehaviorNode): BodyScope {
 		},
 	};
 	return scope;
+}
+
+function preprocessTemplate(
+	parts: TemplateStringsArray,
+	...args: (string | (() => unknown))[]
+): () => string {
+	return () => {
+		const result = parts.reduce((acc, part, i) => {
+			const template = args[i];
+			if (typeof template === "function") {
+				return acc + part + template();
+			}
+			return acc + part + (template ?? "");
+		}, "");
+
+		const lines = result.split("\n");
+		if (lines.length === 0) return "";
+
+		// Find the indentation level of the first non-empty line
+		const firstNonEmptyLine = lines.find((line) => line.trim().length > 0);
+		if (!firstNonEmptyLine) return "";
+
+		const firstLineMatch = firstNonEmptyLine.match(/^\s*/);
+		const firstLineIndent = firstLineMatch ? firstLineMatch[0].length : 0;
+
+		// De-indent all lines by the first line's indentation level
+		return lines
+			.map((line) => line.slice(firstLineIndent))
+			.join("\n")
+			.trim();
+	};
 }

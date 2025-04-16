@@ -1,23 +1,32 @@
-import type { CoreMessage } from "ai";
+import type { BehaviorNode } from "./nodes/BehaviorNode";
 
-export class Blackboard<T extends Record<string, unknown>> {
-	private state: T & { messages: CoreMessage[] };
+export class Blackboard {
+	private state: Record<string, unknown>;
 
-	constructor(initState: Omit<T, "messages">) {
-		this.state = {
-			...initState,
-			messages: [] as CoreMessage[],
-		} as T & { messages: CoreMessage[] };
+	constructor() {
+		this.state = {};
 	}
 
-	getKey<K extends keyof T>(key: K, defaultValue?: T[K]): T[K] {
-		return this.state[key] as T[K];
+	getKey(key: string): unknown {
+		return this.state[key];
 	}
 
-	updateState(update: Partial<T>): void {
-		this.state = {
-			...this.state,
-			...update,
-		} as T & { messages: CoreMessage[] };
+	getPath(...path: string[]): unknown {
+		console.log("Getting path", path);
+		return path.reduce((acc, key) => {
+			if (typeof acc !== "object" || acc === null) {
+				return undefined;
+			}
+			return (acc as Record<string, unknown>)[key];
+		}, this.state as unknown);
+	}
+
+	setKey(key: string, value: unknown): void {
+		this.state[key] = value;
+	}
+
+	saveResult(node: BehaviorNode, result: unknown): void {
+		console.log("Saving result", node.id, result);
+		this.state[`__node_result.${node.id}`] = result;
 	}
 }

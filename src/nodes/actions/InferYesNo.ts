@@ -1,5 +1,3 @@
-import type { CoreMessage } from "ai";
-
 import { BehaviorNodeStatus, type BehaviorNode } from "../BehaviorNode";
 import type { ExecutionContext } from "../../agent";
 import { InferTextNode, type InferTextNodeProps } from "./InferTextNode";
@@ -36,6 +34,8 @@ export class InferYesNoNode extends InferTextNode {
 		if (state === BehaviorNodeStatus.Running) {
 			return BehaviorNodeStatus.Running;
 		}
+
+		this.text += "</result>";
 
 		if (this.text.toLowerCase().includes("yes")) {
 			executionContext.eventLog.addEvent({

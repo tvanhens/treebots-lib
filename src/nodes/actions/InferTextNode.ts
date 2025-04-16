@@ -52,8 +52,10 @@ export class InferTextNode extends BehaviorNode {
 			return BehaviorNodeStatus.Running;
 		}
 
+		const messages = [...executionContext.messageStore.getMessages()];
+
 		this.stream = streamText({
-			messages: executionContext.messageStore.getMessages(),
+			messages,
 			tools: executionContext.enabledTools,
 			onStepFinish: (stepResult) => {
 				for (const message of stepResult.response.messages) {
@@ -63,8 +65,12 @@ export class InferTextNode extends BehaviorNode {
 
 				this.logger?.info({
 					event: "inference-step-finish",
-					request: stepResult.request,
+					messages,
 					response: stepResult.response,
+				});
+
+				executionContext.blackboard.saveResult(this, {
+					text: this.text,
 				});
 			},
 

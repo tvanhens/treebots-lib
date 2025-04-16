@@ -38,9 +38,7 @@ agent
 				ctx.messages.user`Are there urls in the file?`;
 				ctx.infer.yesNo(openrouter("anthropic/claude-3.7-sonnet"));
 
-				ctx.util.log(
-					`Urls found in ${resultsDirectory}/TODO.md, processing...`,
-				);
+				ctx.util.log`Urls found in ${resultsDirectory}/TODO.md, processing...`;
 
 				ctx.messages.system`
                     <instructions>
@@ -53,7 +51,10 @@ agent
                     </response_format>
                 `;
 				ctx.messages.user`Choose a url from the file.`;
-				ctx.infer.text(openrouter("anthropic/claude-3.5-haiku"));
+				const chosenUrl = ctx.infer.text(
+					openrouter("anthropic/claude-3.7-sonnet"),
+				);
+				ctx.util.log`Chosen url: ${chosenUrl.$("text")}`;
 
 				// Scrape the page
 
@@ -82,9 +83,8 @@ agent
 			});
 
 			ctx.control.sequence((ctx) => {
-				ctx.util.log(
-					`No urls found. Waiting for ${resultsDirectory}/TODO.md to be updated.`,
-				);
+				ctx.util
+					.log`No urls found. Waiting for ${resultsDirectory}/TODO.md to be updated.`;
 				// Wait for file to be updated.
 				ctx.control.wait(30000);
 			});
