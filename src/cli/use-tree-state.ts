@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { BehaviorNode, BehaviorNodeStatus } from "../nodes";
+import { BehaviorNodeStatus, type BehaviorNode } from "../nodes";
 import type { Agent } from "../agent";
 
 function getNestingLevel(node: BehaviorNode): number {
@@ -18,6 +18,8 @@ export function useTreeState(agent: Agent) {
 				status: BehaviorNodeStatus;
 				nestingLevel: number;
 				nodeType: string;
+				shouldDisplay: boolean;
+				childrenCount: number;
 			}
 		>
 	>({});
@@ -31,6 +33,8 @@ export function useTreeState(agent: Agent) {
 					status: BehaviorNodeStatus;
 					nestingLevel: number;
 					nodeType: string;
+					shouldDisplay: boolean;
+					childrenCount: number;
 				}
 			> = {};
 			for (const node of nodes) {
@@ -38,6 +42,8 @@ export function useTreeState(agent: Agent) {
 					status: node.getState(),
 					nestingLevel: getNestingLevel(node),
 					nodeType: node.nodeType,
+					shouldDisplay: node.parent?.getState() === BehaviorNodeStatus.Running,
+					childrenCount: node.allChildren().length,
 				};
 			}
 			setState(newStatus);

@@ -12,7 +12,6 @@ export class Blackboard {
 	}
 
 	getPath(...path: string[]): unknown {
-		console.log("Getting path", path);
 		return path.reduce((acc, key) => {
 			if (typeof acc !== "object" || acc === null) {
 				return undefined;
@@ -26,7 +25,6 @@ export class Blackboard {
 	}
 
 	saveResult(node: BehaviorNode, result: unknown): void {
-		console.log("Saving result", node.id, result);
 		this.state[`__node_result.${node.id}`] = result;
 	}
 }

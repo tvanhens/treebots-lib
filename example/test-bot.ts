@@ -30,7 +30,8 @@ agent
 		]);
 
 		ctx.messages.user`
-            Read the file ${resultsDirectory}/TODO.md`;
+            Read the file ${resultsDirectory}/TODO.md
+        `;
 		ctx.infer.text(openrouter("anthropic/claude-3.5-haiku"));
 
 		ctx.control.fallback((ctx) => {
@@ -83,8 +84,9 @@ agent
 			});
 
 			ctx.control.sequence((ctx) => {
-				ctx.util
-					.log`No urls found. Waiting for ${resultsDirectory}/TODO.md to be updated.`;
+				ctx.util.log`
+                    No urls found. Waiting for ${resultsDirectory}/TODO.md to be updated.
+                `;
 				// Wait for file to be updated.
 				ctx.control.wait(30000);
 			});
