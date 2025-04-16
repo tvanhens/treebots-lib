@@ -10,7 +10,7 @@ const AgentMonitor = ({ agent }: { agent: Agent }) => {
 	const { rows } = useTerminalSize();
 
 	return (
-		<Box flexDirection="row" height={rows}>
+		<Box flexDirection="row">
 			<Panel title="Tree State" flexShrink={0}>
 				<TreeState agent={agent} />
 			</Panel>

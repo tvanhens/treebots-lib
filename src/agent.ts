@@ -7,6 +7,7 @@ import { Blackboard } from "./blackboard";
 import { monitorAgent } from "./cli";
 import { EventLog } from "./event-log";
 import { BehaviorNode, type BehaviorNodeStatus, SequenceNode } from "./nodes";
+import { MessageStore } from "./messages";
 
 export interface ExecutionContext<
 	T extends Record<string, unknown> = Record<string, unknown>,
@@ -15,6 +16,7 @@ export interface ExecutionContext<
 	eventLog: EventLog;
 	enabledTools: Record<string, Tool>;
 	mcpClients: Record<string, Awaited<ReturnType<typeof createMCPClient>>>;
+	messageStore: MessageStore;
 }
 
 export class Agent extends BehaviorNode {
@@ -31,6 +33,7 @@ export class Agent extends BehaviorNode {
 			eventLog: new EventLog(),
 			enabledTools: {},
 			mcpClients: {},
+			messageStore: new MessageStore(),
 		};
 
 		process.on("SIGINT", async () => {

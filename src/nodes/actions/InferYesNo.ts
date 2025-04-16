@@ -25,16 +25,9 @@ export class InferYesNoNode extends InferTextNode {
 		executionContext: ExecutionContext,
 	): Promise<BehaviorNodeStatus> {
 		if (this.getState() === BehaviorNodeStatus.Pending) {
-			executionContext.blackboard.updateState({
-				messages: [
-					...(executionContext.blackboard.getKey("messages") as CoreMessage[]),
-					{
-						role: "user",
-						content:
-							"Please give a <result>yes</result> or <result>no</result> answer wrapped in <result>.",
-					},
-					{ role: "assistant", content: "<result>" },
-				],
+			executionContext.messageStore.addMessage({
+				role: "system",
+				content: "Please give a `yes` or `no` answer wrapped in `<result>`.",
 			});
 		}
 

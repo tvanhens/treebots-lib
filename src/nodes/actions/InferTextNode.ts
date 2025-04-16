@@ -1,5 +1,5 @@
 import { streamText } from "ai";
-import type { CoreMessage } from "ai";
+import pino from "pino";
 
 import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
 import type { ExecutionContext } from "../../agent";
@@ -18,7 +18,7 @@ export class InferTextNode extends BehaviorNode {
 
 	protected stream: ReturnType<typeof streamText> | undefined;
 	protected streamDone = false;
-
+	protected logger: pino.Logger | undefined;
 	constructor(
 		parent: BehaviorNode,
 		id: string,
@@ -26,6 +26,19 @@ export class InferTextNode extends BehaviorNode {
 	) {
 		super(parent, id);
 		this.text = "";
+
+		const debugLogDestination = process.env.DEBUG_LOGS;
+		if (debugLogDestination) {
+			this.logger = pino({
+				transport: {
+					target: "pino-pretty",
+					options: {
+						destination: ".inference.logs",
+						colorize: false,
+					},
+				},
+			});
+		}
 	}
 
 	async doTick(
@@ -39,24 +52,22 @@ export class InferTextNode extends BehaviorNode {
 			return BehaviorNodeStatus.Running;
 		}
 
-		const messages = executionContext.blackboard.getKey(
-			"messages",
-		) as CoreMessage[];
-
 		this.stream = streamText({
-			messages,
+			messages: executionContext.messageStore.getMessages(),
 			tools: executionContext.enabledTools,
 			onStepFinish: (stepResult) => {
-				executionContext.blackboard.updateState({
-					messages: [
-						...(executionContext.blackboard.getKey(
-							"messages",
-						) as CoreMessage[]),
-						...stepResult.response.messages,
-					],
-				});
+				for (const message of stepResult.response.messages) {
+					executionContext.messageStore.addMessage(message);
+				}
 				this.streamDone = true;
+
+				this.logger?.info({
+					event: "inference-step-finish",
+					request: stepResult.request,
+					response: stepResult.response,
+				});
 			},
+
 			...this.props,
 		});
 

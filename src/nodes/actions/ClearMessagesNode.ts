@@ -7,9 +7,7 @@ export class ClearMessagesNode extends BehaviorNode {
 	async doTick(
 		executionContext: ExecutionContext,
 	): Promise<BehaviorNodeStatus> {
-		executionContext.blackboard.updateState({
-			messages: [],
-		});
+		executionContext.messageStore.clearMessages();
 		return BehaviorNodeStatus.Success;
 	}
 }
