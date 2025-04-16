@@ -23,7 +23,7 @@ export function Panel({ title, children, ...props }: PanelProps) {
 					{title}
 				</Text>
 			</Box>
-			<Box paddingBottom={1}>{children}</Box>
+			<Box padding={1}>{children}</Box>
 		</Box>
 	);
 }

@@ -10,6 +10,8 @@ import { RepeatNode } from "./nodes/decorators/RepeatNode";
 import { ClearMessagesNode } from "./nodes/actions/ClearMessagesNode";
 import { InferYesNoNode } from "./nodes/actions/InferYesNo";
 
+let id = 0;
+
 export interface NodeHandle {
 	repeat: (maxTimes?: number) => NodeHandle;
 }
@@ -23,8 +25,8 @@ export interface BodyScope {
 	};
 
 	infer: {
-		text: (id: string, model: LanguageModelV1) => NodeHandle;
-		yesNo: (id: string, model: LanguageModelV1) => NodeHandle;
+		text: (model: LanguageModelV1) => NodeHandle;
+		yesNo: (model: LanguageModelV1) => NodeHandle;
 	};
 
 	tools: {
@@ -32,7 +34,7 @@ export interface BodyScope {
 	};
 
 	control: {
-		sequence: (id: string, body: (ctx: BodyScope) => void) => NodeHandle;
+		sequence: (body: (ctx: BodyScope) => void) => NodeHandle;
 	};
 }
 
@@ -52,69 +54,70 @@ export function makeNodeHandle(node: BehaviorNode): NodeHandle {
 }
 
 export function buildScope(parent: BehaviorNode): BodyScope {
-	let messageId = 0;
-
 	const scope: BodyScope = {
 		messages: {
 			user: (parts, ...args) => {
-				const node = new AddMessageNode(parent, `user-${messageId}`, {
+				const node = new AddMessageNode(parent, `user-${id}`, {
 					role: "user",
 					message: parts.reduce((acc, part, i) => {
 						return acc + part + (args[i] ?? "");
 					}, ""),
 				});
-				messageId++;
+				id++;
 				return makeNodeHandle(node);
 			},
 			assistant: (parts, ...args) => {
-				const node = new AddMessageNode(parent, `assistant-${messageId}`, {
+				const node = new AddMessageNode(parent, `assistant-${id}`, {
 					role: "assistant",
 					message: parts.reduce((acc, part, i) => {
 						return acc + part + (args[i] ?? "");
 					}, ""),
 				});
-				messageId++;
+				id++;
 				return makeNodeHandle(node);
 			},
 			system: (parts, ...args) => {
-				const node = new AddMessageNode(parent, `system-${messageId}`, {
+				const node = new AddMessageNode(parent, `system-${id}`, {
 					role: "system",
 					message: parts.reduce((acc, part, i) => {
 						return acc + part + (args[i] ?? "");
 					}, ""),
 				});
-				messageId++;
+				id++;
 				return makeNodeHandle(node);
 			},
 			clear: () => {
-				const node = new ClearMessagesNode(parent, `clear-${messageId}`);
-				messageId++;
+				const node = new ClearMessagesNode(parent, `clear-${id}`);
+				id++;
 				return makeNodeHandle(node);
 			},
 		},
 		tools: {
 			enable: (tools) => {
-				const node = new EnableTools(parent, `enable-${messageId}`, {
+				const node = new EnableTools(parent, `enable-${id}`, {
 					tools,
 				});
-				messageId++;
+				id++;
 				return makeNodeHandle(node);
 			},
 		},
 		infer: {
-			text: (id, model) => {
-				const node = new InferTextNode(parent, id, { model });
+			text: (model) => {
+				const node = new InferTextNode(parent, `infer-${id}`, { model });
+				id++;
 				return makeNodeHandle(node);
 			},
 
-			yesNo: (id, model) => {
-				const node = new InferYesNoNode(parent, id, { model });
+			yesNo: (model) => {
+				const node = new InferYesNoNode(parent, `infer-${id}`, { model });
+				id++;
 				return makeNodeHandle(node);
 			},
 		},
 		control: {
-			sequence: (id, body) => {
-				const node = new SequenceNode(parent, id);
+			sequence: (body) => {
+				const node = new SequenceNode(parent, `sequence-${id}`);
+				id++;
 				body(buildScope(node));
 				return makeNodeHandle(node);
 			},

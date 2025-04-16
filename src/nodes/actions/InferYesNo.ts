@@ -31,8 +31,6 @@ export class InferYesNoNode extends BehaviorNode {
 			"messages",
 		) as CoreMessage[];
 
-		console.log(messages);
-
 		const stream = streamText({
 			model: this.props.model,
 			messages: [

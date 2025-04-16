@@ -80,8 +80,8 @@ export class Agent extends BehaviorNode {
 		this.context.mcpClients[id] = await client;
 	}
 
-	sequence(id: string, body: (ctx: BodyScope) => void): NodeHandle {
-		const root = new SequenceNode(this, id);
+	sequence(body: (ctx: BodyScope) => void): NodeHandle {
+		const root = new SequenceNode(this, "main");
 		body(buildScope(root));
 		return makeNodeHandle(root);
 	}

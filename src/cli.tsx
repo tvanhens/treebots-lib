@@ -11,7 +11,7 @@ const AgentMonitor = ({ agent }: { agent: Agent }) => {
 
 	return (
 		<Box flexDirection="row" height={rows}>
-			<Panel title="Tree State" flexGrow={1}>
+			<Panel title="Tree State">
 				<TreeState agent={agent} />
 			</Panel>
 			<Panel title="Log" flexGrow={1}>
