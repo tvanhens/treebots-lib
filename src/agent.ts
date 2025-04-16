@@ -5,16 +5,15 @@ import type { BodyScope, NodeHandle } from "./dsl";
 import { buildScope, makeNodeHandle } from "./dsl";
 import { Blackboard } from "./blackboard";
 import { monitorAgent } from "./cli";
-import { EventLog } from "./event-log";
 import { BehaviorNode, type BehaviorNodeStatus, SequenceNode } from "./nodes";
 import { MessageStore } from "./messages";
 
 export interface ExecutionContext {
 	blackboard: Blackboard;
-	eventLog: EventLog;
 	enabledTools: Record<string, Tool>;
 	mcpClients: Record<string, Awaited<ReturnType<typeof createMCPClient>>>;
 	messageStore: MessageStore;
+	fork(): ExecutionContext;
 }
 
 export class Agent extends BehaviorNode {
@@ -28,10 +27,14 @@ export class Agent extends BehaviorNode {
 		super(undefined, "agent");
 		this.context = {
 			blackboard: new Blackboard(),
-			eventLog: new EventLog(),
 			enabledTools: {},
 			mcpClients: {},
 			messageStore: new MessageStore(),
+			fork: () => ({
+				...this.context,
+				// TODO: maybe we want to clone other things here?
+				messageStore: this.context.messageStore.fork(),
+			}),
 		};
 
 		process.on("SIGINT", async () => {
@@ -70,10 +73,6 @@ export class Agent extends BehaviorNode {
 			throw new Error("Root node not found");
 		}
 		return root;
-	}
-
-	getEventLog(): EventLog {
-		return this.context.eventLog;
 	}
 
 	getExecutionContext(): ExecutionContext {

@@ -21,11 +21,6 @@ export class LogMessage extends BehaviorNode {
 	): Promise<BehaviorNodeStatus> {
 		const message = this.props.message();
 
-		executionContext.eventLog.addEvent({
-			type: "logMessage",
-			message,
-		});
-
 		this.statusText = message;
 
 		return BehaviorNodeStatus.Success;

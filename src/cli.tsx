@@ -3,7 +3,6 @@ import { Box, render } from "ink";
 import type { Agent } from "./agent";
 import { Panel } from "./cli/components/Panel";
 import { TreeState } from "./cli/components/TreeState";
-import { LogView } from "./cli/components/LogView";
 
 const AgentMonitor = ({ agent }: { agent: Agent }) => {
 	return (

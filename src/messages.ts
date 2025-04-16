@@ -1,7 +1,11 @@
 import type { CoreMessage } from "ai";
 
 export class MessageStore {
-	private messages: CoreMessage[] = [];
+	private messages: CoreMessage[];
+
+	constructor(messages?: CoreMessage[]) {
+		this.messages = messages ?? [];
+	}
 
 	addMessage(message: CoreMessage) {
 		this.messages.push(message);
@@ -13,5 +17,9 @@ export class MessageStore {
 
 	clearMessages() {
 		this.messages = [];
+	}
+
+	fork() {
+		return new MessageStore([...this.messages]);
 	}
 }

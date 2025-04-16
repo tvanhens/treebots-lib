@@ -3,8 +3,8 @@ import type { BehaviorNode } from "./nodes/BehaviorNode";
 export class Blackboard {
 	private state: Record<string, unknown>;
 
-	constructor() {
-		this.state = {};
+	constructor(state?: Record<string, unknown>) {
+		this.state = state ?? {};
 	}
 
 	getKey(key: string): unknown {

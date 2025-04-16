@@ -34,12 +34,6 @@ export abstract class BehaviorNode {
 		const state = await this.doTick(executionContext);
 		if (state !== this.state) {
 			this.state = state;
-			executionContext.eventLog.addEvent({
-				type: "nodeStateChange",
-				node: this.id,
-				fromState: this.state,
-				toState: state,
-			});
 		}
 		return state;
 	}

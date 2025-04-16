@@ -38,17 +38,9 @@ export class InferYesNoNode extends InferTextNode {
 		this.text += "</result>";
 
 		if (this.text.toLowerCase().includes("yes")) {
-			executionContext.eventLog.addEvent({
-				type: "logMessage",
-				message: `${this.id} - yes response received.`,
-			});
 			return BehaviorNodeStatus.Success;
 		}
 
-		executionContext.eventLog.addEvent({
-			type: "logMessage",
-			message: `[${this.id}] yes/no returned ${this.text}`,
-		});
 		return BehaviorNodeStatus.Failure;
 	}
 }
