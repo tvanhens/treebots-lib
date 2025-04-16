@@ -19,12 +19,10 @@ export class RepeatNode extends BehaviorNode {
 		this.loopNumber = 0;
 	}
 
-	protected enter(executionContext: ExecutionContext): void {
-		this.loopNumber = 0;
-	}
-
-	protected async doTick(executionContext: ExecutionContext): Promise<void> {
-		const times = this.props?.maxTimes;
+	protected async doTick(
+		executionContext: ExecutionContext,
+	): Promise<BehaviorNodeStatus> {
+		const maxTimes = this.props?.maxTimes;
 
 		const firstChild = this.children.at(0);
 
@@ -32,27 +30,29 @@ export class RepeatNode extends BehaviorNode {
 			throw new Error("RepeatNode: first child is required");
 		}
 
-		if (times === undefined || this.loopNumber < times) {
+		if (maxTimes === undefined || this.loopNumber < maxTimes) {
 			await firstChild.tick(executionContext);
 
 			if (firstChild.getState() === BehaviorNodeStatus.Success) {
 				this.loopNumber++;
-				this.reset();
-				this.setState(BehaviorNodeStatus.Running);
-				return;
+				firstChild.reset();
+				return BehaviorNodeStatus.Running;
 			}
 
 			if (firstChild.getState() === BehaviorNodeStatus.Failure) {
-				this.setState(BehaviorNodeStatus.Failure);
-				return;
+				return BehaviorNodeStatus.Failure;
 			}
 
 			if (firstChild.getState() === BehaviorNodeStatus.Running) {
-				this.setState(BehaviorNodeStatus.Running);
-				return;
+				return BehaviorNodeStatus.Running;
 			}
 		}
 
-		this.setState(BehaviorNodeStatus.Success);
+		return BehaviorNodeStatus.Success;
+	}
+
+	reset(): void {
+		this.loopNumber = 0;
+		super.reset();
 	}
 }

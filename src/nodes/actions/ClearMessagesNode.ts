@@ -4,11 +4,12 @@ import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
 export class ClearMessagesNode extends BehaviorNode {
 	readonly nodeType = "clear_messages";
 
-	protected enter(executionContext: ExecutionContext): void {
+	async doTick(
+		executionContext: ExecutionContext,
+	): Promise<BehaviorNodeStatus> {
 		executionContext.blackboard.updateState({
 			messages: [],
 		});
-
-		this.setState(BehaviorNodeStatus.Success);
+		return BehaviorNodeStatus.Success;
 	}
 }

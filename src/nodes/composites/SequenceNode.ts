@@ -10,28 +10,37 @@ import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
  */
 export class SequenceNode extends BehaviorNode {
 	readonly nodeType = "sequence";
+	pendingChildren: BehaviorNode[] | undefined;
 
-	async enter(_executionContext: ExecutionContext): Promise<void> {
-		for (const child of this.children) {
-			child.setState(BehaviorNodeStatus.Pending);
+	async doTick(
+		executionContext: ExecutionContext,
+	): Promise<BehaviorNodeStatus> {
+		if (this.pendingChildren === undefined) {
+			this.pendingChildren = [...this.children];
 		}
+
+		const nextChild = this.pendingChildren.shift();
+
+		if (nextChild === undefined) {
+			return BehaviorNodeStatus.Success;
+		}
+
+		const state = await nextChild.tick(executionContext);
+
+		if (state === BehaviorNodeStatus.Failure) {
+			return BehaviorNodeStatus.Failure;
+		}
+
+		if (state === BehaviorNodeStatus.Success) {
+			return BehaviorNodeStatus.Running;
+		}
+
+		this.pendingChildren.unshift(nextChild);
+		return BehaviorNodeStatus.Running;
 	}
 
-	async doTick(executionContext: ExecutionContext): Promise<void> {
-		for (const child of this.children) {
-			const status = await child.tick(executionContext);
-
-			if (status === BehaviorNodeStatus.Failure) {
-				this.setState(BehaviorNodeStatus.Failure);
-				return;
-			}
-
-			if (status === BehaviorNodeStatus.Running) {
-				this.setState(BehaviorNodeStatus.Running);
-				return;
-			}
-		}
-
-		this.setState(BehaviorNodeStatus.Success);
+	reset(): void {
+		this.pendingChildren = undefined;
+		super.reset();
 	}
 }

@@ -1,20 +1,23 @@
 import { streamText } from "ai";
-import type { CoreMessage, LanguageModelV1 } from "ai";
+import type { CoreMessage } from "ai";
 
 import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
 import type { ExecutionContext } from "../../agent";
 
-export interface InferTextNodeProps {
-	model: LanguageModelV1;
-}
+export type InferTextNodeProps = Omit<
+	Parameters<typeof streamText>[0],
+	"messages" | "tools" | "onStepFinish"
+>;
 
 /**
  * A node that infers a text using a language model.
  */
 export class InferTextNode extends BehaviorNode {
-	readonly nodeType = "infer-text";
-
+	readonly nodeType: string = "infer-text";
 	text: string;
+
+	protected stream: ReturnType<typeof streamText> | undefined;
+	protected streamDone = false;
 
 	constructor(
 		parent: BehaviorNode,
@@ -25,15 +28,22 @@ export class InferTextNode extends BehaviorNode {
 		this.text = "";
 	}
 
-	async enter(executionContext: ExecutionContext) {
-		this.text = "";
+	async doTick(
+		executionContext: ExecutionContext,
+	): Promise<BehaviorNodeStatus> {
+		if (this.stream) {
+			if (this.streamDone === true) {
+				return BehaviorNodeStatus.Success;
+			}
+
+			return BehaviorNodeStatus.Running;
+		}
 
 		const messages = executionContext.blackboard.getKey(
 			"messages",
 		) as CoreMessage[];
 
-		const stream = streamText({
-			model: this.props.model,
+		this.stream = streamText({
 			messages,
 			tools: executionContext.enabledTools,
 			onStepFinish: (stepResult) => {
@@ -45,20 +55,23 @@ export class InferTextNode extends BehaviorNode {
 						...stepResult.response.messages,
 					],
 				});
-				this.setState(BehaviorNodeStatus.Success);
+				this.streamDone = true;
 			},
+			...this.props,
 		});
 
 		(async () => {
-			for await (const chunk of stream.fullStream) {
+			if (!this.stream) {
+				return;
+			}
+
+			for await (const chunk of this.stream.fullStream) {
 				if (chunk.type === "text-delta") {
 					this.text += chunk.textDelta;
 				}
 
 				if (chunk.type === "error") {
-					this.setState(BehaviorNodeStatus.Failure);
-					console.error(chunk.error);
-					return;
+					throw chunk.error;
 				}
 
 				if (chunk.type === "tool-call") {
@@ -71,5 +84,14 @@ export class InferTextNode extends BehaviorNode {
 				}
 			}
 		})();
+
+		return BehaviorNodeStatus.Running;
+	}
+
+	reset(): void {
+		this.text = "";
+		this.streamDone = false;
+		this.stream = undefined;
+		super.reset();
 	}
 }

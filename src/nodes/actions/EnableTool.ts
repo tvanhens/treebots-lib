@@ -16,7 +16,9 @@ export class EnableTools extends BehaviorNode {
 		super(parent, id);
 	}
 
-	protected async enter(executionContext: ExecutionContext): Promise<void> {
+	protected async doTick(
+		executionContext: ExecutionContext,
+	): Promise<BehaviorNodeStatus> {
 		for (const tool of this.config.tools) {
 			const [mcpId, toolName] = tool.split("::");
 
@@ -37,6 +39,6 @@ export class EnableTools extends BehaviorNode {
 			executionContext.enabledTools[toolName] = toolImplementation;
 		}
 
-		this.setState(BehaviorNodeStatus.Success);
+		return BehaviorNodeStatus.Success;
 	}
 }

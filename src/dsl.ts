@@ -9,6 +9,7 @@ import { EnableTools } from "./nodes/actions/EnableTool";
 import { RepeatNode } from "./nodes/decorators/RepeatNode";
 import { ClearMessagesNode } from "./nodes/actions/ClearMessagesNode";
 import { InferYesNoNode } from "./nodes/actions/InferYesNo";
+import { WaitNode } from "./nodes/actions/WaitNode";
 
 let id = 0;
 
@@ -35,6 +36,7 @@ export interface BodyScope {
 
 	control: {
 		sequence: (body: (ctx: BodyScope) => void) => NodeHandle;
+		wait: (duration: number) => NodeHandle;
 	};
 }
 
@@ -119,6 +121,13 @@ export function buildScope(parent: BehaviorNode): BodyScope {
 				const node = new SequenceNode(parent, `sequence-${id}`);
 				id++;
 				body(buildScope(node));
+				return makeNodeHandle(node);
+			},
+			wait: (duration) => {
+				const node = new WaitNode(parent, `wait-${id}`, {
+					durationInMilliseconds: duration,
+				});
+				id++;
 				return makeNodeHandle(node);
 			},
 		},

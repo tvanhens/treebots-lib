@@ -22,7 +22,9 @@ export class AddMessageNode extends BehaviorNode {
 		super(parent, id);
 	}
 
-	async enter(executionContext: ExecutionContext): Promise<void> {
+	async doTick(
+		executionContext: ExecutionContext,
+	): Promise<BehaviorNodeStatus> {
 		executionContext.blackboard.updateState({
 			messages: [
 				...(executionContext.blackboard.getKey("messages") as CoreMessage[]),
@@ -32,6 +34,6 @@ export class AddMessageNode extends BehaviorNode {
 				},
 			],
 		});
-		this.setState(BehaviorNodeStatus.Success);
+		return BehaviorNodeStatus.Success;
 	}
 }

@@ -1,5 +1,4 @@
 import { Agent, type ExecutionContext } from "../agent";
-import { RepeatNode } from "./decorators/RepeatNode";
 
 export enum BehaviorNodeStatus {
 	Pending = "pending",
@@ -27,44 +26,26 @@ export abstract class BehaviorNode {
 	}
 
 	async tick(executionContext: ExecutionContext): Promise<BehaviorNodeStatus> {
-		if (this.getState() === BehaviorNodeStatus.Pending) {
-			this.setState(BehaviorNodeStatus.Running);
-			this.enter(executionContext);
+		if (this.isFinished()) {
+			return this.state;
 		}
 
-		if (this.getState() === BehaviorNodeStatus.Running) {
-			await this.doTick(executionContext);
-
-			if (this.getState() !== BehaviorNodeStatus.Running) {
-				this.exit(executionContext);
-			}
+		const state = await this.doTick(executionContext);
+		if (state !== this.state) {
+			this.state = state;
+			executionContext.eventLog.addEvent({
+				type: "nodeStateChange",
+				node: this.id,
+				fromState: this.state,
+				toState: state,
+			});
 		}
-
-		return this.getState();
+		return state;
 	}
 
-	protected doTick(executionContext: ExecutionContext): Promise<void> | void {
-		return Promise.resolve();
-	}
-
-	protected enter(_executionContext: ExecutionContext): void {}
-
-	protected exit(_executionContext: ExecutionContext): void {}
-
-	setState(state: BehaviorNodeStatus): void {
-		if (this.state === state) {
-			return;
-		}
-
-		this.getExecutionContext().eventLog.addEvent({
-			type: "nodeStateChange",
-			node: this.id,
-			fromState: this.state,
-			toState: state,
-		});
-
-		this.state = state;
-	}
+	protected abstract doTick(
+		executionContext: ExecutionContext,
+	): Promise<BehaviorNodeStatus> | BehaviorNodeStatus;
 
 	getState(): BehaviorNodeStatus {
 		return this.state;
@@ -100,7 +81,7 @@ export abstract class BehaviorNode {
 	}
 
 	reset(): void {
-		this.setState(BehaviorNodeStatus.Pending);
+		this.state = BehaviorNodeStatus.Pending;
 		for (const child of this.children) {
 			child.reset();
 		}
@@ -109,5 +90,12 @@ export abstract class BehaviorNode {
 	removeChild(child: BehaviorNode): void {
 		this.children = this.children.filter((c) => c !== child);
 		child.parent = undefined;
+	}
+
+	isFinished(): boolean {
+		return (
+			this.state === BehaviorNodeStatus.Success ||
+			this.state === BehaviorNodeStatus.Failure
+		);
 	}
 }

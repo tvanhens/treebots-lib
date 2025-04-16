@@ -11,17 +11,38 @@ export interface WaitNodeProps {
 export class WaitNode extends BehaviorNode {
 	readonly nodeType = "wait";
 
+	timeRemaining: number;
+	lastTick: number;
+
 	constructor(
 		parent: BehaviorNode,
 		id: string,
 		private props: WaitNodeProps,
 	) {
 		super(parent, id);
+		this.timeRemaining = props.durationInMilliseconds;
+		this.lastTick = Date.now();
 	}
 
-	protected enter(_executionContext: ExecutionContext): void {
-		setTimeout(() => {
-			this.setState(BehaviorNodeStatus.Success);
-		}, this.props.durationInMilliseconds);
+	protected async doTick(): Promise<BehaviorNodeStatus> {
+		const now = Date.now();
+		if (this.getState() === BehaviorNodeStatus.Pending) {
+			this.lastTick = now;
+		}
+		this.timeRemaining -= now - this.lastTick;
+		this.lastTick = now;
+
+		if (this.timeRemaining <= 0) {
+			this.timeRemaining = 0;
+			return BehaviorNodeStatus.Success;
+		}
+
+		return BehaviorNodeStatus.Running;
+	}
+
+	reset(): void {
+		this.timeRemaining = this.props.durationInMilliseconds;
+		this.lastTick = Date.now();
+		super.reset();
 	}
 }

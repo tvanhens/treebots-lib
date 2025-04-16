@@ -1,13 +1,12 @@
+import { Experimental_StdioMCPTransport, type StdioConfig } from "ai/mcp-stdio";
+import { experimental_createMCPClient as createMCPClient, type Tool } from "ai";
+
+import type { BodyScope, NodeHandle } from "./dsl";
+import { buildScope, makeNodeHandle } from "./dsl";
 import { Blackboard } from "./blackboard";
 import { monitorAgent } from "./cli";
 import { EventLog } from "./event-log";
-
-import { BehaviorNode, SequenceNode } from "./nodes";
-
-import { Experimental_StdioMCPTransport, type StdioConfig } from "ai/mcp-stdio";
-import { experimental_createMCPClient as createMCPClient, type Tool } from "ai";
-import type { BodyScope, NodeHandle } from "./dsl";
-import { buildScope, makeNodeHandle } from "./dsl";
+import { BehaviorNode, type BehaviorNodeStatus, SequenceNode } from "./nodes";
 
 export interface ExecutionContext<
 	T extends Record<string, unknown> = Record<string, unknown>,
@@ -49,12 +48,19 @@ export class Agent extends BehaviorNode {
 		(async () => {
 			while (true) {
 				if (root instanceof BehaviorNode) {
-					await root.tick(this.context);
+					await this.tick(this.context);
 				}
 				// TODO: this is gross, we should try to make it event based.
 				await new Promise((resolve) => setTimeout(resolve, 100));
 			}
 		})();
+	}
+
+	async doTick(
+		executionContext: ExecutionContext,
+	): Promise<BehaviorNodeStatus> {
+		const root = this.getRoot();
+		return root.tick(executionContext);
 	}
 
 	getRoot(): BehaviorNode {
