@@ -18,6 +18,8 @@ export class SequenceNode extends BehaviorNode {
 			this.pendingChildren = [...this.children];
 		}
 
+		this.statusText = `num-pending=${this.pendingChildren.length}`;
+
 		const nextChild = this.pendingChildren.shift();
 
 		if (nextChild === undefined) {

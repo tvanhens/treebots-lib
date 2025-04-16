@@ -20,6 +20,7 @@ export function useTreeState(agent: Agent) {
 				nodeType: string;
 				shouldDisplay: boolean;
 				childrenCount: number;
+				statusText: string;
 			}
 		>
 	>({});
@@ -35,6 +36,7 @@ export function useTreeState(agent: Agent) {
 					nodeType: string;
 					shouldDisplay: boolean;
 					childrenCount: number;
+					statusText: string;
 				}
 			> = {};
 			for (const node of nodes) {
@@ -42,8 +44,11 @@ export function useTreeState(agent: Agent) {
 					status: node.getState(),
 					nestingLevel: getNestingLevel(node),
 					nodeType: node.nodeType,
-					shouldDisplay: node.parent?.getState() === BehaviorNodeStatus.Running,
+					shouldDisplay:
+						node.parent?.getState() === BehaviorNodeStatus.Running ||
+						node.statusText !== "",
 					childrenCount: node.allChildren().length,
+					statusText: node.statusText.replace(/\n/g, ""),
 				};
 			}
 			setState(newStatus);

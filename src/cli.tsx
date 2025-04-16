@@ -7,17 +7,15 @@ import { LogView } from "./cli/components/LogView";
 
 const AgentMonitor = ({ agent }: { agent: Agent }) => {
 	return (
-		<Box flexDirection="row">
-			<Panel title="Tree State" flexShrink={0}>
+		<Box flexDirection="column" flexGrow={1} height={30}>
+			<Panel title="Tree State" flexShrink={0} flexGrow={1}>
 				<TreeState agent={agent} />
-			</Panel>
-			<Panel title="Log" flexGrow={1}>
-				<LogView agent={agent} />
 			</Panel>
 		</Box>
 	);
 };
 
 export function monitorAgent(agent: Agent) {
-	render(<AgentMonitor agent={agent} />);
+	console.log("\x1b[2J");
+	render(<AgentMonitor agent={agent} />, { patchConsole: false });
 }

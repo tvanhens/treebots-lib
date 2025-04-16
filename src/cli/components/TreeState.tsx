@@ -9,42 +9,39 @@ export function TreeState({ agent }: { agent: Agent }) {
 	const state = useTreeState(agent);
 
 	return (
-		<Box flexDirection="column">
+		<Box flexDirection="column" flexGrow={1}>
 			{Object.entries(state)
 				.filter(([_id, { shouldDisplay }]) => shouldDisplay)
-				.filter(([_id, { nodeType }]) =>
-					[
-						"sequence",
-						"fallback",
-						"wait",
-						"infer-text",
-						"infer-yes-no",
-					].includes(nodeType),
-				)
-				.map(([id, { nestingLevel, nodeType, status, childrenCount }]) => (
-					<Box key={id} flexDirection="row">
-						<Box paddingLeft={(nestingLevel - 1) * 2} flexDirection="row">
-							<Text wrap="truncate">{`${nodeType} `}</Text>
-							<Text wrap="truncate">[{id}] </Text>
-						</Box>
-
-						<Box
-							alignItems="flex-end"
-							justifyContent="flex-end"
-							marginLeft={1}
-							flexGrow={1}
-						>
-							{["sequence", "fallback", "repeat"].includes(nodeType) && (
-								<Box marginRight={1}>
-									{status !== BehaviorNodeStatus.Running && (
-										<Text dimColor>({childrenCount} children)</Text>
-									)}
+				.map(
+					([
+						id,
+						{ nestingLevel, nodeType, status, childrenCount, statusText },
+					]) => (
+						<Box key={id} flexDirection="row">
+							<Box flexDirection="row" flexGrow={1} flexShrink={0}>
+								<Box paddingLeft={(nestingLevel - 1) * 2} flexDirection="row">
+									<Text wrap="truncate">{`${nodeType} `}</Text>
+									<Text wrap="truncate">[{id}] </Text>
 								</Box>
-							)}
-							<Status status={status} />
+
+								<Box
+									alignItems="flex-start"
+									justifyContent="flex-end"
+									marginLeft={1}
+									flexGrow={1}
+									gap={1}
+								>
+									<Status status={status} />
+								</Box>
+							</Box>
+							<Box marginLeft={1} flexShrink={1} flexBasis={"75%"}>
+								<Text dimColor wrap="truncate-start">
+									{statusText}
+								</Text>
+							</Box>
 						</Box>
-					</Box>
-				))}
+					),
+				)}
 		</Box>
 	);
 }

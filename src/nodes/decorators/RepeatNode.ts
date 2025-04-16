@@ -22,6 +22,10 @@ export class RepeatNode extends BehaviorNode {
 	protected async doTick(
 		executionContext: ExecutionContext,
 	): Promise<BehaviorNodeStatus> {
+		this.statusText = `loop-count=${this.loopNumber}${
+			this.props?.maxTimes ? `/${this.props.maxTimes}` : ""
+		}`;
+
 		const maxTimes = this.props?.maxTimes;
 
 		const firstChild = this.children.at(0);
@@ -35,6 +39,9 @@ export class RepeatNode extends BehaviorNode {
 
 			if (firstChild.getState() === BehaviorNodeStatus.Success) {
 				this.loopNumber++;
+				this.statusText = `loop-count=${this.loopNumber}${
+					this.props?.maxTimes ? `/${this.props.maxTimes}` : ""
+				}`;
 				firstChild.reset();
 				return BehaviorNodeStatus.Running;
 			}

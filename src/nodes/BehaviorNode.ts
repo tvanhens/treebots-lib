@@ -12,6 +12,7 @@ export abstract class BehaviorNode {
 	parent?: BehaviorNode;
 	children: BehaviorNode[];
 	abstract readonly nodeType: string;
+	statusText = "";
 
 	private state: BehaviorNodeStatus;
 
@@ -82,6 +83,7 @@ export abstract class BehaviorNode {
 
 	reset(): void {
 		this.state = BehaviorNodeStatus.Pending;
+		this.statusText = "";
 		for (const child of this.children) {
 			child.reset();
 		}

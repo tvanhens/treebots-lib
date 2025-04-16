@@ -19,10 +19,14 @@ export class LogMessage extends BehaviorNode {
 	async doTick(
 		executionContext: ExecutionContext,
 	): Promise<BehaviorNodeStatus> {
+		const message = this.props.message();
+
 		executionContext.eventLog.addEvent({
 			type: "logMessage",
-			message: this.props.message(),
+			message,
 		});
+
+		this.statusText = message;
 
 		return BehaviorNodeStatus.Success;
 	}

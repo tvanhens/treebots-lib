@@ -7,7 +7,9 @@ export class ClearMessagesNode extends BehaviorNode {
 	async doTick(
 		executionContext: ExecutionContext,
 	): Promise<BehaviorNodeStatus> {
+		const messageCount = executionContext.messageStore.getMessages().length;
 		executionContext.messageStore.clearMessages();
+		this.statusText = `messages-removed=${messageCount}`;
 		return BehaviorNodeStatus.Success;
 	}
 }

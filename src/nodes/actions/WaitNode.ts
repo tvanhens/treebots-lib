@@ -24,6 +24,7 @@ export class WaitNode extends BehaviorNode {
 	}
 
 	protected async doTick(): Promise<BehaviorNodeStatus> {
+		this.statusText = `time-remaining=${this.timeRemaining}`;
 		const now = Date.now();
 		if (this.getState() === BehaviorNodeStatus.Pending) {
 			this.lastTick = now;

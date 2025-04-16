@@ -22,10 +22,15 @@ export class AddMessageNode extends BehaviorNode {
 	}
 
 	async doTick(ctx: ExecutionContext): Promise<BehaviorNodeStatus> {
+		const message = this.props.message();
+
 		ctx.messageStore.addMessage({
 			role: this.props.role,
-			content: this.props.message(),
+			content: message,
 		});
+
+		this.statusText = `${this.props.role}: ${message}`;
+
 		return BehaviorNodeStatus.Success;
 	}
 }

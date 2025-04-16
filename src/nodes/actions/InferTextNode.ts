@@ -85,6 +85,7 @@ export class InferTextNode extends BehaviorNode {
 			for await (const chunk of this.stream.fullStream) {
 				if (chunk.type === "text-delta") {
 					this.text += chunk.textDelta;
+					this.statusText = this.text;
 				}
 
 				if (chunk.type === "error") {
