@@ -54,7 +54,7 @@ export class InferYesNoNode extends InferTextNode {
 
 		executionContext.eventLog.addEvent({
 			type: "logMessage",
-			message: `${this.id} - no response received.`,
+			message: `[${this.id}] yes/no returned ${this.text}`,
 		});
 		return BehaviorNodeStatus.Failure;
 	}

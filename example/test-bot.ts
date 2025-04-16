@@ -38,6 +38,10 @@ agent
 				ctx.messages.user`Are there urls in the file?`;
 				ctx.infer.yesNo(openrouter("anthropic/claude-3.7-sonnet"));
 
+				ctx.util.log(
+					`Urls found in ${resultsDirectory}/TODO.md, processing...`,
+				);
+
 				ctx.messages.system`
                     <instructions>
                     Using the file that was read, format a response to the user's request.
@@ -77,8 +81,13 @@ agent
 				ctx.infer.text(openrouter("anthropic/claude-3.5-haiku"));
 			});
 
-			// Wait for file to be updated.
-			ctx.control.wait(30000);
+			ctx.control.sequence((ctx) => {
+				ctx.util.log(
+					`No urls found. Waiting for ${resultsDirectory}/TODO.md to be updated.`,
+				);
+				// Wait for file to be updated.
+				ctx.control.wait(30000);
+			});
 		});
 	})
 	.repeat();

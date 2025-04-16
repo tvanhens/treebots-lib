@@ -11,6 +11,7 @@ import { ClearMessagesNode } from "./nodes/actions/ClearMessagesNode";
 import { InferYesNoNode } from "./nodes/actions/InferYesNo";
 import { WaitNode } from "./nodes/actions/WaitNode";
 import { FallbackNode } from "./nodes/composites/Fallback";
+import { LogMessage } from "./nodes/actions/LogMessage";
 
 let id = 0;
 
@@ -33,6 +34,10 @@ export interface BodyScope {
 
 	tools: {
 		enable: (tools: string[]) => NodeHandle;
+	};
+
+	util: {
+		log: (message: string) => NodeHandle;
 	};
 
 	control: {
@@ -135,6 +140,13 @@ export function buildScope(parent: BehaviorNode): BodyScope {
 				const node = new WaitNode(parent, `wait-${id}`, {
 					durationInMilliseconds: duration,
 				});
+				id++;
+				return makeNodeHandle(node);
+			},
+		},
+		util: {
+			log: (message) => {
+				const node = new LogMessage(parent, `log-${id}`, { message });
 				id++;
 				return makeNodeHandle(node);
 			},
