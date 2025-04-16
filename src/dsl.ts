@@ -10,6 +10,7 @@ import { RepeatNode } from "./nodes/decorators/RepeatNode";
 import { ClearMessagesNode } from "./nodes/actions/ClearMessagesNode";
 import { InferYesNoNode } from "./nodes/actions/InferYesNo";
 import { WaitNode } from "./nodes/actions/WaitNode";
+import { FallbackNode } from "./nodes/composites/Fallback";
 
 let id = 0;
 
@@ -36,6 +37,7 @@ export interface BodyScope {
 
 	control: {
 		sequence: (body: (ctx: BodyScope) => void) => NodeHandle;
+		fallback: (body: (ctx: BodyScope) => void) => NodeHandle;
 		wait: (duration: number) => NodeHandle;
 	};
 }
@@ -119,6 +121,12 @@ export function buildScope(parent: BehaviorNode): BodyScope {
 		control: {
 			sequence: (body) => {
 				const node = new SequenceNode(parent, `sequence-${id}`);
+				id++;
+				body(buildScope(node));
+				return makeNodeHandle(node);
+			},
+			fallback: (body) => {
+				const node = new FallbackNode(parent, `fallback-${id}`);
 				id++;
 				body(buildScope(node));
 				return makeNodeHandle(node);
