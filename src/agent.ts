@@ -7,10 +7,13 @@ import { Blackboard } from "./blackboard";
 import { monitorAgent } from "./cli";
 import { BehaviorNode, type BehaviorNodeStatus, SequenceNode } from "./nodes";
 
+type MCPClient = Awaited<ReturnType<typeof createMCPClient>>;
+
 export class Agent extends BehaviorNode {
 	readonly id = "agent";
 	readonly nodeType = "agent";
 	readonly children: BehaviorNode[] = [];
+	readonly mcpClients: Record<string, MCPClient> = {};
 
 	constructor() {
 		super(undefined, "agent");
@@ -20,7 +23,7 @@ export class Agent extends BehaviorNode {
 		this.blackboard = blackboard;
 
 		process.on("SIGINT", async () => {
-			for (const client of Object.values(blackboard.getKey("__mcpClients"))) {
+			for (const client of Object.values(this.mcpClients)) {
 				await client.close();
 			}
 
@@ -59,15 +62,48 @@ export class Agent extends BehaviorNode {
 		const client = createMCPClient({
 			transport: new Experimental_StdioMCPTransport(transport),
 		});
-		this.getBlackboard().setKey("__mcpClients", {
-			...this.getBlackboard().getKey("__mcpClients"),
-			[id]: await client,
-		});
+		this.mcpClients[id] = await client;
 	}
 
 	sequence(body: (ctx: BodyScope) => void): NodeHandle {
 		const root = new SequenceNode(this, "main");
 		body(buildScope(root));
 		return makeNodeHandle(root);
+	}
+
+	static getAgent(node: BehaviorNode): Agent {
+		if (node instanceof Agent) {
+			return node;
+		}
+
+		if (!node.parent) {
+			throw new Error("Agent not found");
+		}
+
+		return Agent.getAgent(node.parent);
+	}
+
+	async getTool(name: string): Promise<Tool> {
+		const [mcpId, toolName] = name.split("::");
+		if (!mcpId || !toolName) {
+			throw new Error(`Invalid tool: ${name}`);
+		}
+
+		const mcpClient = this.mcpClients[mcpId];
+		if (!mcpClient) {
+			throw new Error(`MCP client not found: ${mcpId}`);
+		}
+
+		const tools = await mcpClient.tools();
+		const tool = tools[toolName];
+		if (!tool) {
+			throw new Error(
+				`Tool not found: ${toolName}, available tools: ${Object.keys(
+					tools,
+				).join(", ")}`,
+			);
+		}
+
+		return tool;
 	}
 }

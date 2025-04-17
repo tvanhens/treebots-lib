@@ -6,7 +6,7 @@ import { TreeState } from "./cli/components/TreeState";
 
 const AgentMonitor = ({ agent }: { agent: Agent }) => {
 	return (
-		<Box flexDirection="column" flexGrow={1} height={30}>
+		<Box flexDirection="column" flexGrow={1}>
 			<Panel title="Tree State" flexShrink={0} flexGrow={1}>
 				<TreeState agent={agent} />
 			</Panel>

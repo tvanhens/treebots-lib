@@ -1,12 +1,15 @@
-import { streamText } from "ai";
+import { streamText, type Tool } from "ai";
 import pino from "pino";
 
 import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
+import { Agent } from "../../agent";
 
 export type InferTextNodeProps = Omit<
 	Parameters<typeof streamText>[0],
 	"messages" | "tools" | "onStepFinish"
->;
+> & {
+	tools?: string[];
+};
 
 /**
  * A node that infers a text using a language model.
@@ -18,6 +21,9 @@ export class InferTextNode extends BehaviorNode {
 	protected stream: ReturnType<typeof streamText> | undefined;
 	protected streamDone = false;
 	protected logger: pino.Logger | undefined;
+
+	private tools: Record<string, Tool> | undefined;
+
 	constructor(
 		parent: BehaviorNode,
 		id: string,
@@ -41,6 +47,21 @@ export class InferTextNode extends BehaviorNode {
 	}
 
 	async doTick(): Promise<BehaviorNodeStatus> {
+		const { tools: selectedTools, ...props } = this.props;
+
+		if (!this.tools && selectedTools) {
+			const tools: Record<string, Tool> = {};
+			for (const tool of selectedTools) {
+				const agent = Agent.getAgent(this);
+				const toolName = tool.split("::")[1];
+				if (!toolName) {
+					throw new Error(`Invalid tool: ${tool}`);
+				}
+				tools[toolName] = await agent.getTool(tool);
+			}
+			this.tools = tools;
+		}
+
 		if (this.stream) {
 			if (this.streamDone === true) {
 				return BehaviorNodeStatus.Success;
@@ -53,7 +74,7 @@ export class InferTextNode extends BehaviorNode {
 
 		this.stream = streamText({
 			messages,
-			tools: this.getBlackboard().getKey("__tools"),
+			tools: this.tools,
 			onStepFinish: (stepResult) => {
 				for (const message of stepResult.response.messages) {
 					this.getBlackboard().setKey("__messages", [
@@ -74,7 +95,7 @@ export class InferTextNode extends BehaviorNode {
 				});
 			},
 
-			...this.props,
+			...props,
 		});
 
 		(async () => {

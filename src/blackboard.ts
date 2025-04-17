@@ -1,11 +1,7 @@
 import type { CoreMessage, experimental_createMCPClient, Tool } from "ai";
 
-type MCPClient = Awaited<ReturnType<typeof experimental_createMCPClient>>;
-
 interface BlackboardState {
 	__messages: CoreMessage[];
-	__tools: Record<string, Tool>;
-	__mcpClients: Record<string, MCPClient>;
 	[key: string]: unknown;
 }
 

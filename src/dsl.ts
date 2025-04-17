@@ -3,9 +3,9 @@ import {
 	AddMessageNode,
 	type BehaviorNode,
 	InferTextNode,
+	type InferTextNodeProps,
 	SequenceNode,
 } from "./nodes";
-import { EnableTools } from "./nodes/actions/EnableTool";
 import { RepeatNode } from "./nodes/decorators/RepeatNode";
 import { ClearMessagesNode } from "./nodes/actions/ClearMessagesNode";
 import { InferYesNoNode } from "./nodes/actions/InferYesNo";
@@ -30,12 +30,11 @@ export interface BodyScope {
 	};
 
 	infer: {
-		text: (model: LanguageModelV1) => NodeHandle;
+		text: (
+			model: LanguageModelV1,
+			props?: Omit<InferTextNodeProps, "model">,
+		) => NodeHandle;
 		yesNo: (model: LanguageModelV1) => NodeHandle;
-	};
-
-	tools: {
-		enable: (tools: string[]) => NodeHandle;
 	};
 
 	util: {
@@ -115,18 +114,12 @@ export function buildScope(parent: BehaviorNode): BodyScope {
 				return makeNodeHandle(node);
 			},
 		},
-		tools: {
-			enable: (tools) => {
-				const node = new EnableTools(parent, `enable-${id}`, {
-					tools,
-				});
-				id++;
-				return makeNodeHandle(node);
-			},
-		},
 		infer: {
-			text: (model) => {
-				const node = new InferTextNode(parent, `infer-${id}`, { model });
+			text: (model, props) => {
+				const node = new InferTextNode(parent, `infer-${id}`, {
+					model,
+					...props,
+				});
 				id++;
 				return makeNodeHandle(node);
 			},

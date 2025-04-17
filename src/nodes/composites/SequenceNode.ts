@@ -11,13 +11,13 @@ export class SequenceNode extends BehaviorNode {
 	pendingChildren: BehaviorNode[] | undefined;
 
 	async doTick(): Promise<BehaviorNodeStatus> {
-		if (this.pendingChildren === undefined) {
+		if (this.getState() === BehaviorNodeStatus.Pending) {
 			this.pendingChildren = [...this.children];
 		}
 
-		this.statusText = `num-pending=${this.pendingChildren.length}`;
+		this.statusText = `num-pending=${this.pendingChildren?.length}`;
 
-		const nextChild = this.pendingChildren.shift();
+		const nextChild = this.pendingChildren?.shift();
 
 		if (nextChild === undefined) {
 			return BehaviorNodeStatus.Success;
@@ -33,7 +33,7 @@ export class SequenceNode extends BehaviorNode {
 			return BehaviorNodeStatus.Running;
 		}
 
-		this.pendingChildren.unshift(nextChild);
+		this.pendingChildren?.unshift(nextChild);
 		return BehaviorNodeStatus.Running;
 	}
 
