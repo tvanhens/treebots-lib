@@ -1,4 +1,3 @@
-import type { ExecutionContext } from "../..";
 import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
 
 export interface LogMessageProps {
@@ -16,9 +15,7 @@ export class LogMessage extends BehaviorNode {
 		super(parent, id);
 	}
 
-	async doTick(
-		executionContext: ExecutionContext,
-	): Promise<BehaviorNodeStatus> {
+	async doTick(): Promise<BehaviorNodeStatus> {
 		const message = this.props.message();
 
 		this.statusText = message;

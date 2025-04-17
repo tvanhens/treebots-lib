@@ -1,4 +1,4 @@
-import { Agent, type ExecutionContext } from "../agent";
+import type { Blackboard } from "../blackboard";
 
 export enum BehaviorNodeStatus {
 	Pending = "pending",
@@ -14,6 +14,7 @@ export abstract class BehaviorNode {
 	abstract readonly nodeType: string;
 	statusText = "";
 
+	protected blackboard: Blackboard | undefined;
 	private state: BehaviorNodeStatus;
 
 	constructor(parent: BehaviorNode | undefined, id: string) {
@@ -21,26 +22,25 @@ export abstract class BehaviorNode {
 		this.state = BehaviorNodeStatus.Pending;
 		this.parent = parent;
 		this.children = [];
+		this.blackboard = parent?.blackboard;
 		if (parent) {
 			parent.addChild(this);
 		}
 	}
 
-	async tick(executionContext: ExecutionContext): Promise<BehaviorNodeStatus> {
+	async tick(): Promise<BehaviorNodeStatus> {
 		if (this.isFinished()) {
 			return this.state;
 		}
 
-		const state = await this.doTick(executionContext);
+		const state = await this.doTick();
 		if (state !== this.state) {
 			this.state = state;
 		}
 		return state;
 	}
 
-	protected abstract doTick(
-		executionContext: ExecutionContext,
-	): Promise<BehaviorNodeStatus> | BehaviorNodeStatus;
+	protected abstract doTick(): Promise<BehaviorNodeStatus> | BehaviorNodeStatus;
 
 	getState(): BehaviorNodeStatus {
 		return this.state;
@@ -64,17 +64,6 @@ export abstract class BehaviorNode {
 		return children;
 	}
 
-	getExecutionContext(): ExecutionContext {
-		let parent = this.parent;
-		while (parent) {
-			if (parent instanceof Agent) {
-				return parent.getExecutionContext();
-			}
-			parent = parent.parent;
-		}
-		throw new Error("No execution context found");
-	}
-
 	reset(): void {
 		this.state = BehaviorNodeStatus.Pending;
 		this.statusText = "";
@@ -93,5 +82,12 @@ export abstract class BehaviorNode {
 			this.state === BehaviorNodeStatus.Success ||
 			this.state === BehaviorNodeStatus.Failure
 		);
+	}
+
+	getBlackboard(): Blackboard {
+		if (!this.blackboard) {
+			throw new Error("Blackboard not found");
+		}
+		return this.blackboard;
 	}
 }

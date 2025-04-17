@@ -2,7 +2,6 @@ import { streamText } from "ai";
 import pino from "pino";
 
 import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
-import type { ExecutionContext } from "../../agent";
 
 export type InferTextNodeProps = Omit<
 	Parameters<typeof streamText>[0],
@@ -41,9 +40,7 @@ export class InferTextNode extends BehaviorNode {
 		}
 	}
 
-	async doTick(
-		executionContext: ExecutionContext,
-	): Promise<BehaviorNodeStatus> {
+	async doTick(): Promise<BehaviorNodeStatus> {
 		if (this.stream) {
 			if (this.streamDone === true) {
 				return BehaviorNodeStatus.Success;
@@ -52,14 +49,14 @@ export class InferTextNode extends BehaviorNode {
 			return BehaviorNodeStatus.Running;
 		}
 
-		const messages = [...executionContext.messageStore.getMessages()];
+		const messages = [...this.getBlackboard().getMessages()];
 
 		this.stream = streamText({
 			messages,
-			tools: executionContext.enabledTools,
+			tools: this.getBlackboard().getTools(),
 			onStepFinish: (stepResult) => {
 				for (const message of stepResult.response.messages) {
-					executionContext.messageStore.addMessage(message);
+					this.getBlackboard().addMessage(message);
 				}
 				this.streamDone = true;
 
@@ -69,7 +66,7 @@ export class InferTextNode extends BehaviorNode {
 					response: stepResult.response,
 				});
 
-				executionContext.blackboard.saveResult(this, {
+				this.getBlackboard().saveResult(this, {
 					text: this.text,
 				});
 			},

@@ -57,9 +57,7 @@ export function makeNodeHandle(node: BehaviorNode): NodeHandle {
 		id: node.id,
 		$: (...keys: string[]) => {
 			return () =>
-				node
-					.getExecutionContext()
-					.blackboard.getPath(`__node_result.${node.id}`, ...keys);
+				node.getBlackboard().getPath(`__node_result.${node.id}`, ...keys);
 		},
 		repeat: (maxTimes?: number) => {
 			const parent = node.parent;

@@ -1,4 +1,3 @@
-import type { ExecutionContext } from "../../agent";
 import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
 
 export interface RepeatNodeProps {
@@ -19,9 +18,7 @@ export class RepeatNode extends BehaviorNode {
 		this.loopNumber = 0;
 	}
 
-	protected async doTick(
-		executionContext: ExecutionContext,
-	): Promise<BehaviorNodeStatus> {
+	protected async doTick(): Promise<BehaviorNodeStatus> {
 		this.statusText = `loop-count=${this.loopNumber}${
 			this.props?.maxTimes ? `/${this.props.maxTimes}` : ""
 		}`;
@@ -35,7 +32,7 @@ export class RepeatNode extends BehaviorNode {
 		}
 
 		if (maxTimes === undefined || this.loopNumber < maxTimes) {
-			await firstChild.tick(executionContext);
+			await firstChild.tick();
 
 			if (firstChild.getState() === BehaviorNodeStatus.Success) {
 				this.loopNumber++;

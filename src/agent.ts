@@ -6,39 +6,21 @@ import { buildScope, makeNodeHandle } from "./dsl";
 import { Blackboard } from "./blackboard";
 import { monitorAgent } from "./cli";
 import { BehaviorNode, type BehaviorNodeStatus, SequenceNode } from "./nodes";
-import { MessageStore } from "./messages";
-
-export interface ExecutionContext {
-	blackboard: Blackboard;
-	enabledTools: Record<string, Tool>;
-	mcpClients: Record<string, Awaited<ReturnType<typeof createMCPClient>>>;
-	messageStore: MessageStore;
-	fork(): ExecutionContext;
-}
 
 export class Agent extends BehaviorNode {
 	readonly id = "agent";
 	readonly nodeType = "agent";
 	readonly children: BehaviorNode[] = [];
 
-	private context: ExecutionContext;
-
 	constructor() {
 		super(undefined, "agent");
-		this.context = {
-			blackboard: new Blackboard(),
-			enabledTools: {},
-			mcpClients: {},
-			messageStore: new MessageStore(),
-			fork: () => ({
-				...this.context,
-				// TODO: maybe we want to clone other things here?
-				messageStore: this.context.messageStore.fork(),
-			}),
-		};
+
+		const blackboard = new Blackboard();
+
+		this.blackboard = blackboard;
 
 		process.on("SIGINT", async () => {
-			for (const client of Object.values(this.context.mcpClients)) {
+			for (const client of Object.values(blackboard.getMCPClients())) {
 				await client.close();
 			}
 
@@ -52,7 +34,7 @@ export class Agent extends BehaviorNode {
 		(async () => {
 			while (true) {
 				if (root instanceof BehaviorNode) {
-					await this.tick(this.context);
+					await this.tick();
 				}
 				// TODO: this is gross, we should try to make it event based.
 				await new Promise((resolve) => setTimeout(resolve, 100));
@@ -60,11 +42,9 @@ export class Agent extends BehaviorNode {
 		})();
 	}
 
-	async doTick(
-		executionContext: ExecutionContext,
-	): Promise<BehaviorNodeStatus> {
+	async doTick(): Promise<BehaviorNodeStatus> {
 		const root = this.getRoot();
-		return root.tick(executionContext);
+		return root.tick();
 	}
 
 	getRoot(): BehaviorNode {
@@ -75,15 +55,11 @@ export class Agent extends BehaviorNode {
 		return root;
 	}
 
-	getExecutionContext(): ExecutionContext {
-		return this.context;
-	}
-
 	async addStdioMCP(id: string, transport: StdioConfig) {
 		const client = createMCPClient({
 			transport: new Experimental_StdioMCPTransport(transport),
 		});
-		this.context.mcpClients[id] = await client;
+		this.getBlackboard().mergeMCPClient(id, await client);
 	}
 
 	sequence(body: (ctx: BodyScope) => void): NodeHandle {

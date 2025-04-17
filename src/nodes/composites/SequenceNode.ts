@@ -1,4 +1,3 @@
-import type { ExecutionContext } from "../../agent";
 import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
 
 /**
@@ -11,9 +10,7 @@ export class SequenceNode extends BehaviorNode {
 	readonly nodeType = "sequence";
 	pendingChildren: BehaviorNode[] | undefined;
 
-	async doTick(
-		executionContext: ExecutionContext,
-	): Promise<BehaviorNodeStatus> {
+	async doTick(): Promise<BehaviorNodeStatus> {
 		if (this.pendingChildren === undefined) {
 			this.pendingChildren = [...this.children];
 		}
@@ -26,7 +23,7 @@ export class SequenceNode extends BehaviorNode {
 			return BehaviorNodeStatus.Success;
 		}
 
-		const state = await nextChild.tick(executionContext);
+		const state = await nextChild.tick();
 
 		if (state === BehaviorNodeStatus.Failure) {
 			return BehaviorNodeStatus.Failure;

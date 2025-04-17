@@ -1,5 +1,3 @@
-import type { ExecutionContext } from "../../agent";
-
 import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
 
 export interface AddMessageNodeProps {
@@ -21,10 +19,10 @@ export class AddMessageNode extends BehaviorNode {
 		super(parent, id);
 	}
 
-	async doTick(ctx: ExecutionContext): Promise<BehaviorNodeStatus> {
+	async doTick(): Promise<BehaviorNodeStatus> {
 		const message = this.props.message();
 
-		ctx.messageStore.addMessage({
+		this.getBlackboard().addMessage({
 			role: this.props.role,
 			content: message,
 		});

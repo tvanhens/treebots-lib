@@ -1,4 +1,3 @@
-import type { ExecutionContext } from "../../agent";
 import { BehaviorNode, BehaviorNodeStatus } from "../BehaviorNode";
 
 export interface EnableToolsProps {
@@ -16,9 +15,7 @@ export class EnableTools extends BehaviorNode {
 		super(parent, id);
 	}
 
-	protected async doTick(
-		executionContext: ExecutionContext,
-	): Promise<BehaviorNodeStatus> {
+	protected async doTick(): Promise<BehaviorNodeStatus> {
 		for (const tool of this.config.tools) {
 			const [mcpId, toolName] = tool.split("::");
 
@@ -26,7 +23,7 @@ export class EnableTools extends BehaviorNode {
 				throw new Error(`Invalid tool: ${tool}`);
 			}
 
-			const mcpClient = executionContext.mcpClients[mcpId];
+			const mcpClient = this.getBlackboard().getMCPClient(mcpId);
 			if (!mcpClient) {
 				throw new Error(`MCP client not found: ${mcpId}`);
 			}
@@ -36,7 +33,7 @@ export class EnableTools extends BehaviorNode {
 				throw new Error(`Tool not found: ${toolName}`);
 			}
 
-			executionContext.enabledTools[toolName] = toolImplementation;
+			this.getBlackboard().mergeTools({ [toolName]: toolImplementation });
 		}
 
 		return BehaviorNodeStatus.Success;

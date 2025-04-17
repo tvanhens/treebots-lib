@@ -1,5 +1,4 @@
 import { BehaviorNodeStatus, type BehaviorNode } from "../BehaviorNode";
-import type { ExecutionContext } from "../../agent";
 import { InferTextNode, type InferTextNodeProps } from "./InferTextNode";
 
 export type InferYesNoNodeProps = Pick<InferTextNodeProps, "model">;
@@ -19,17 +18,15 @@ export class InferYesNoNode extends InferTextNode {
 		});
 	}
 
-	async doTick(
-		executionContext: ExecutionContext,
-	): Promise<BehaviorNodeStatus> {
+	async doTick(): Promise<BehaviorNodeStatus> {
 		if (this.getState() === BehaviorNodeStatus.Pending) {
-			executionContext.messageStore.addMessage({
+			this.getBlackboard().addMessage({
 				role: "system",
 				content: "Please give a `yes` or `no` answer wrapped in `<result>`.",
 			});
 		}
 
-		const state = await super.doTick(executionContext);
+		const state = await super.doTick();
 
 		if (state === BehaviorNodeStatus.Running) {
 			return BehaviorNodeStatus.Running;
