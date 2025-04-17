@@ -22,10 +22,13 @@ export class AddMessageNode extends BehaviorNode {
 	async doTick(): Promise<BehaviorNodeStatus> {
 		const message = this.props.message();
 
-		this.getBlackboard().addMessage({
-			role: this.props.role,
-			content: message,
-		});
+		this.getBlackboard().setKey("__messages", [
+			...this.getBlackboard().getKey("__messages"),
+			{
+				role: this.props.role,
+				content: message,
+			},
+		]);
 
 		this.statusText = `${this.props.role}: ${message}`;
 

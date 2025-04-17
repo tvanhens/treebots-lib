@@ -20,10 +20,13 @@ export class InferYesNoNode extends InferTextNode {
 
 	async doTick(): Promise<BehaviorNodeStatus> {
 		if (this.getState() === BehaviorNodeStatus.Pending) {
-			this.getBlackboard().addMessage({
-				role: "system",
-				content: "Please give a `yes` or `no` answer wrapped in `<result>`.",
-			});
+			this.getBlackboard().setKey("__messages", [
+				...this.getBlackboard().getKey("__messages"),
+				{
+					role: "system",
+					content: "Please give a `yes` or `no` answer wrapped in `<result>`.",
+				},
+			]);
 		}
 
 		const state = await super.doTick();

@@ -56,8 +56,18 @@ export function makeNodeHandle(node: BehaviorNode): NodeHandle {
 	return {
 		id: node.id,
 		$: (...keys: string[]) => {
-			return () =>
-				node.getBlackboard().getPath(`__node_result.${node.id}`, ...keys);
+			return () => {
+				const result = node.getBlackboard().getKey(`__node_result.${node.id}`);
+				if (keys.length === 0) {
+					return result;
+				}
+				return keys.reduce((acc, key) => {
+					if (typeof acc === "object" && acc !== null && key in acc) {
+						return (acc as Record<string, unknown>)[key];
+					}
+					return acc;
+				}, result as unknown);
+			};
 		},
 		repeat: (maxTimes?: number) => {
 			const parent = node.parent;

@@ -23,7 +23,7 @@ export class EnableTools extends BehaviorNode {
 				throw new Error(`Invalid tool: ${tool}`);
 			}
 
-			const mcpClient = this.getBlackboard().getMCPClient(mcpId);
+			const mcpClient = this.getBlackboard().getKey("__mcpClients")[mcpId];
 			if (!mcpClient) {
 				throw new Error(`MCP client not found: ${mcpId}`);
 			}
@@ -33,7 +33,10 @@ export class EnableTools extends BehaviorNode {
 				throw new Error(`Tool not found: ${toolName}`);
 			}
 
-			this.getBlackboard().mergeTools({ [toolName]: toolImplementation });
+			this.getBlackboard().setKey("__tools", {
+				...this.getBlackboard().getKey("__tools"),
+				[toolName]: toolImplementation,
+			});
 		}
 
 		return BehaviorNodeStatus.Success;

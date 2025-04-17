@@ -20,7 +20,7 @@ export class Agent extends BehaviorNode {
 		this.blackboard = blackboard;
 
 		process.on("SIGINT", async () => {
-			for (const client of Object.values(blackboard.getMCPClients())) {
+			for (const client of Object.values(blackboard.getKey("__mcpClients"))) {
 				await client.close();
 			}
 
@@ -59,7 +59,10 @@ export class Agent extends BehaviorNode {
 		const client = createMCPClient({
 			transport: new Experimental_StdioMCPTransport(transport),
 		});
-		this.getBlackboard().mergeMCPClient(id, await client);
+		this.getBlackboard().setKey("__mcpClients", {
+			...this.getBlackboard().getKey("__mcpClients"),
+			[id]: await client,
+		});
 	}
 
 	sequence(body: (ctx: BodyScope) => void): NodeHandle {

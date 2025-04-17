@@ -4,8 +4,8 @@ export class ClearMessagesNode extends BehaviorNode {
 	readonly nodeType = "clear_messages";
 
 	async doTick(): Promise<BehaviorNodeStatus> {
-		const messageCount = this.getBlackboard().getMessages().length;
-		this.getBlackboard().clearMessages();
+		const messageCount = this.getBlackboard().getKey("__messages").length;
+		this.getBlackboard().setKey("__messages", []);
 		this.statusText = `messages-removed=${messageCount}`;
 		return BehaviorNodeStatus.Success;
 	}

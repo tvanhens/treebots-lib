@@ -49,14 +49,17 @@ export class InferTextNode extends BehaviorNode {
 			return BehaviorNodeStatus.Running;
 		}
 
-		const messages = [...this.getBlackboard().getMessages()];
+		const messages = this.getBlackboard().getKey("__messages");
 
 		this.stream = streamText({
 			messages,
-			tools: this.getBlackboard().getTools(),
+			tools: this.getBlackboard().getKey("__tools"),
 			onStepFinish: (stepResult) => {
 				for (const message of stepResult.response.messages) {
-					this.getBlackboard().addMessage(message);
+					this.getBlackboard().setKey("__messages", [
+						...this.getBlackboard().getKey("__messages"),
+						message,
+					]);
 				}
 				this.streamDone = true;
 
@@ -66,7 +69,7 @@ export class InferTextNode extends BehaviorNode {
 					response: stepResult.response,
 				});
 
-				this.getBlackboard().saveResult(this, {
+				this.getBlackboard().setKey(`__node_result.${this.id}`, {
 					text: this.text,
 				});
 			},
