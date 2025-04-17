@@ -21,7 +21,11 @@ export class Blackboard {
 	}
 
 	getKey<K extends keyof BlackboardState>(key: K): BlackboardState[K] {
-		return this.state[key];
+		const value = this.state[key];
+		if (typeof value === "object" && value !== null) {
+			return Object.freeze(value);
+		}
+		return value;
 	}
 
 	setKey<K extends keyof BlackboardState>(
